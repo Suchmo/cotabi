@@ -3,67 +3,84 @@
 このファイルは、このリポジトリで作業する Claude Code に向けたガイダンスです。
 詳細仕様は `docs/` 配下のドキュメントを正とします。作業前に該当ドキュメントを確認してください。
 
-- `docs/requirements_v4.md` … 要件定義書(目的・コスト方針・フェーズ別機能要件・技術スタック)
-- `docs/screen_design_v3.md` … 画面設計・データモデル仕様書(Phase1確定版)
-- `docs/setup_guide.md` … 環境構築手順書(Windows側のセットアップ、Firebaseプロジェクト作成手順)
+- `docs/requirements_v5.md` … 要件定義書(目的・コスト方針・アプリ形態・フェーズ別機能要件・技術スタック)
+- `docs/screen_design_v4.md` … 画面設計・データモデル仕様書(Phase1確定版。画面構成・データモデルはv3から変更なし、実装技術の読み替えのみ)
+- `docs/setup_guide_v2.md` … 環境構築手順書(PWA方針での最新セットアップ手順、進捗状況)
+
+過去バージョン(`requirements_v4.md`, `screen_design_v3.md`, `setup_guide.md` 等)がリポジトリに残っている場合、それらはネイティブiOS(SwiftUI/Xcode)時代の古い方針であり、**現在は無効**。参照する場合は上記の最新版のみとすること。
 
 ## プロジェクト概要
 
-**COTABI** は、カップル(本人・彼女)2人だけで使うことを前提とした、外部非公開の iOS 旅行記録アプリです。
+**COTABI** は、カップル(本人・彼女)2人だけで使うことを前提とした、外部非公開の旅行記録アプリです。
 
 - 世界地図/日本地図上で訪問済みの国・都道府県を色分け表示し、タップするとその場所での旅の記録を閲覧できる
 - スポット単位(位置情報付き)で写真・日記・日付を記録する
 - ホーム画面はマップをメインとし、「国/都道府県をタップ→ルート→旅行→記録」という導線を軸にする
-- `docs/requirements_v4.md` 内では開発当初の仮称として「Wander Log」という名称が残っているが、正式名称は **COTABI**(リポジトリ名 `cotabi` に対応)。ドキュメント内の旧称に惑わされないこと
 
 副次的な目的として、Claude Code を使った要件定義→仕様策定→実装という一連の開発フローの実践がある点も踏まえ、ドキュメント(`docs/`)との整合性を保ちながら進める。
+
+## アプリ形態(v5で変更・重要)
+
+**ネイティブiOSアプリ(SwiftUI/Xcode)ではなく、PWA(Progressive Web App / React + Vite)として開発する。**
+
+- 変更理由: 無料のApple Developer Personal Teamでは証明書・インストール用プロファイルが発行から7日で失効する制約があり、Macなし・完全無料での長期運用が事実上困難と判明したため
+- PWAであれば **Mac・Xcode・Apple Developer Program・コード署名は一切不要**。Windows上のブラウザとエディタだけで開発が完結する
+- iPhone側では、Safariから対象URLにアクセスし「ホーム画面に追加」することでアプリのように利用する
+- 制約: プッシュ通知やバックグラウンド処理の自由度はネイティブアプリより低い(iOS Safariの制限による。Phase4でWeb Push(iOS16.4以降)を検討するが制約あり)
+
+**過去の方針(ネイティブiOS + GitHub Actions macOSランナーでのビルド・署名)は完全に廃止。** GitHub Actionsを使う場合も、macOSランナーや証明書・プロビジョニングプロファイル関連の作業は発生しない。
 
 ## 現在のフェーズ
 
 **Phase 1(コア体験/MVP)を実装中。**
 
-Phase1の機能スコープ(訪問マップ、旅行記録、データ共有、統計表示、アルバムまとめ、旅程表、ルート表示など)は `docs/requirements_v4.md` の「2. 機能要件」および `docs/screen_design_v3.md` を参照。Phase2以降(プライバシーロック、思い出フラッシュバック、ウィッシュリスト、天気自動記録、OCR等)の実装には着手しない。フェーズの優先順位やスコープ判断に迷う場合はユーザーに確認する。
+Phase1の機能スコープ(訪問マップ、旅行記録、データ共有、統計表示、アルバムまとめ、旅程表、ルート表示、PWA基本機能(ホーム画面追加・オフライン閲覧)など)は `docs/requirements_v5.md` の「2. 機能要件」および `docs/screen_design_v4.md` を参照。Phase2以降(プライバシーロック、思い出フラッシュバック、ウィッシュリスト、天気自動記録、OCR、プッシュ通知等)の実装には着手しない。フェーズの優先順位やスコープ判断に迷う場合はユーザーに確認する。
 
 ## 開発方針・コスト方針
 
-- **開発端末は Windows。Mac は使用しない。** ローカルでの Xcode ビルド・実機/シミュレータ実行はできない前提で作業する。
-- **ビルドと署名は GitHub Actions の macOS ランナー上で実行する。**
-- **コストは完全永続無料であること(Claude Code の利用料を除く)。**
-  - Apple Developer Program($99/年)が前提となる機能・サービス(CloudKit、WeatherKit、MusicKit等)は採用しない
-  - App配布はApp Storeを介さず、無料のPersonal Teamで本人・彼女のiPhone2台に直接ビルド・インストールする
-  - Firebase は無料枠(Sparkプラン)の範囲内でのみ利用する。技術・サービス選定時は必ず無料枠に収まるか確認し、有料化しうる構成を導入する場合は事前にユーザーへ確認する
-- **リポジトリは public。** GitHub Actionsのビルド無料枠を十分に確保するための判断であり、実データ(写真・日記等)はリポジトリに含めずFirebase側にのみ保存する。Firebaseの認証情報等の秘匿情報はGitHub Secretsで管理し、コード・リポジトリには一切含めない
+- **開発端末は Windows。Mac は不要。** ビルド・デプロイもWindows上、または軽量なCI(GitHub Actions **Ubuntu** ランナー)で完結する。
+- **コストは原則完全永続無料であること(Claude Code の利用料を除く)。**
+  - Apple Developer Program($99/年)が前提となる機能・配布方式は採用しない
+  - Firebase Firestore / Authentication / Hosting は無料枠(Sparkプラン相当)の範囲内でのみ利用する
+  - **例外: Firebase Storageのみ、リージョン制約によりBlazeプラン(従量課金プラン)への登録が必要。** ただし実利用量はSparkプラン相当の無料枠内に収める運用とし、想定外の課金を防ぐため必ず予算アラートを設定する。Storage以外の用途でBlazeプラン前提の機能・設定を追加する場合は事前にユーザーへ確認する
+  - 技術・サービス選定時は必ず上記の無料枠方針に収まるか確認し、逸脱しうる構成を導入する場合は事前にユーザーへ確認する
+- **リポジトリは public。** CI(GitHub Actions)の無料枠を十分に確保するための判断であり、実データ(写真・日記等)はリポジトリに含めずFirebase側にのみ保存する。Firebaseの認証情報等の秘匿情報は環境変数(`.env`、GitHub Secrets)で管理し、コード・リポジトリには一切含めない
 
 ## 技術スタック
 
 | レイヤ | 採用技術 |
 |---|---|
-| UI | SwiftUI |
+| UI | React + Vite |
 | データ永続化・共有 | Firebase Firestore(無料枠) |
-| 認証 | Firebase Authentication(無料枠、メール/パスワード方式) |
-| 画像保存 | Firebase Storage(無料枠) |
-| 地図表示 | MapKit + 独自ポリゴン描画(GeoJSON等の地域ポリゴンデータを用いた国・都道府県ごとの色分け表示。MapKit標準機能だけでは実現できないため独自描画が必要) |
-| 位置情報取得 | Core Location |
-| 生体認証(Phase2) | LocalAuthentication フレームワーク |
+| 認証 | Firebase Authentication(無料枠) |
+| 画像保存 | Firebase Storage(Blazeプラン登録が必要だが、無料枠内での運用+予算アラート設定を前提とする) |
+| 地図表示 | Leaflet + GeoJSON(国・都道府県ポリゴンデータによる色分け表示) |
+| 位置情報取得 | ブラウザの Geolocation API |
+| 画像撮影・選択 | ブラウザの File input / getUserMedia API |
+| オフライン対応 | Service Worker + Cache API |
+| ホーム画面追加 | Web App Manifest(manifest.json) |
+| ホスティング | Firebase Hosting(無料枠) |
+| デプロイ自動化 | GitHub Actions(Ubuntuランナー) |
+| 生体認証・ロック(Phase2) | WebAuthn、または簡易PINコード |
 | 天気情報取得(Phase4) | Open-Meteo等の無料・APIキー不要な天気API |
-| OCR(Phase4) | Vision フレームワーク(オンデバイス処理) |
+| OCR(Phase4) | Tesseract.js等のブラウザ内OCRライブラリ、または無料枠のあるクラウドOCR |
 
-> `docs/requirements_v4.md` の非機能要件表に「データ保存先: iCloud(CloudKit)」という記載が残っているが、これはCloudKit不採用方針(1.4節)と矛盾する古い記述。データ保存先は **Firebase** が正。
+Firebase設定値(`firebaseConfig`)はiOS用の`GoogleService-Info.plist`ではなく、**Web用アプリとしてFirebaseコンソールに別途登録した値**を使用し、`.env`で管理する(コミットしない)。
 
-## 画面構成・データモデル(Phase1確定)
+## 画面構成・データモデル(Phase1確定、v3から変更なし)
 
 - 下タブは「マップ」「統計」「設定」の3つのみ。記録追加は各画面の「+」ボタンから行い、タブは増やさない
-- 画面遷移・ER図の詳細は `docs/screen_design_v3.md` を参照
+- 画面遷移・ER図の詳細は `docs/screen_design_v4.md` を参照
 - 主要エンティティ: `USER`(本人・彼女2レコード固定) / `TRIP`(1回の旅行、国・都道府県コードに紐づく) / `SPOT`(旅行内スポットまたは単発記録、`trip_id`はnullable) / `PHOTO`(スポットに紐づく複数枚の写真)
 - **訪問済み判定・統計集計ルール**: `trip_id`の有無を問わず、一度でもその国/都道府県にスポットが記録されていれば「訪問済み」として扱う(単発記録も集計に含める)
 - **ルートマップの色分け**: 固定パレットを旅行の登録順に自動割り当て(ユーザーによる色選択は行わない)
 
 ## 実装上の注意
 
-- Windows環境で作業しているため、Swift/SwiftUIコードのその場でのビルド確認はできない。構文・API呼び出しの正しさは慎重に確認し、実際のビルド確認はGitHub ActionsのCI結果に委ねる
 - Firebase関連の実装(セキュリティルール含む)は、2人専用アプリという前提を踏まえ、認証済みの2ユーザーのみがデータにアクセスできるように設計する
 - 無料枠の上限(Firestoreの読み書き回数、Storage容量など)を超えうる設計(無制限の画像アップロード等)は避け、必要なら圧縮や上限設定を検討する
-- Bundle IDやFirebaseプロジェクト設定など、環境固有の情報を変更・追加する際は `docs/setup_guide.md` の内容との整合性を確認する
+- Service Workerのキャッシュ戦略・PWAのmanifest.json設計は、Phase1の「オフラインでの記録閲覧」要件を満たす範囲で実装する
+- 環境固有の情報(Firebase設定、デプロイ設定等)を変更・追加する際は `docs/setup_guide_v2.md` の内容との整合性を確認する
 
 ## コーディングルール
 
