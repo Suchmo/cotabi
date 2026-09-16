@@ -13,7 +13,7 @@ import L from 'leaflet'
 import type { LatLngExpression } from 'leaflet'
 import type { LocatedSpot, TripRoute } from '../lib/regionRoutes'
 import { MAP_COLORS } from '../lib/mapColors'
-import { DARK_TILE_URL, DARK_TILE_ATTRIBUTION } from '../lib/mapTiles'
+import { LIGHT_TILE_URL, LIGHT_TILE_ATTRIBUTION } from '../lib/mapTiles'
 
 type RouteMapProps = {
   center: LatLngExpression
@@ -24,15 +24,22 @@ type RouteMapProps = {
   onRouteClick: (tripId: string) => void
 }
 
+// 選択した国・都道府県の周辺だけをパン・ズームできるようにする。
+// 国土の大きさは国ごとに全く異なるため、固定値ではなく境界データから
+// そのつど計算する。
 function FitToBoundary({ feature }: { feature: GeoJSON.Feature | null }) {
   const map = useMap()
 
   useEffect(() => {
     if (!feature) return
     const bounds = L.geoJSON(feature).getBounds()
-    if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [24, 24] })
-    }
+    if (!bounds.isValid()) return
+
+    map.fitBounds(bounds, { padding: [24, 24] })
+
+    const padded = bounds.pad(0.6)
+    map.setMaxBounds(padded)
+    map.setMinZoom(map.getBoundsZoom(padded))
   }, [feature, map])
 
   return null
@@ -50,11 +57,14 @@ export function RouteMap({
     <MapContainer
       center={center}
       zoom={zoom}
+      maxZoom={16}
+      maxBoundsViscosity={1.0}
+      zoomControl={false}
       style={{ height: '100%', width: '100%' }}
     >
       <TileLayer
-        url={DARK_TILE_URL}
-        attribution={DARK_TILE_ATTRIBUTION}
+        url={LIGHT_TILE_URL}
+        attribution={LIGHT_TILE_ATTRIBUTION}
         detectRetina
       />
       {boundaryFeature && (

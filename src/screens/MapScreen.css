@@ -14,6 +14,7 @@
 
 .map-screen__region-toggle button {
   flex: 1;
+  min-height: 44px;
   padding: 8px 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
@@ -31,6 +32,7 @@
 
 .map-screen__list-link {
   flex-shrink: 0;
+  min-height: 44px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -38,6 +40,23 @@
   font-size: 13px;
   color: var(--color-text-secondary);
   text-decoration: none;
+}
+
+.map-screen__continent-filter {
+  padding: 0 12px 8px;
+  flex-shrink: 0;
+}
+
+.map-screen__continent-filter select {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--color-text);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
 }
 
 .map-screen__map-area {

@@ -1,9 +1,14 @@
 import { useMemo, useRef } from 'react'
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet'
-import type { Layer, LatLngExpression, PathOptions } from 'leaflet'
+import type {
+  LatLngBoundsExpression,
+  Layer,
+  LatLngExpression,
+  PathOptions,
+} from 'leaflet'
 import { useGeoJson } from '../hooks/useGeoJson'
 import { MAP_COLORS } from '../lib/mapColors'
-import { DARK_TILE_URL, DARK_TILE_ATTRIBUTION } from '../lib/mapTiles'
+import { LIGHT_TILE_URL, LIGHT_TILE_ATTRIBUTION } from '../lib/mapTiles'
 
 const VISITED_STYLE: PathOptions = {
   fillColor: MAP_COLORS.accent,
@@ -14,7 +19,7 @@ const VISITED_STYLE: PathOptions = {
 
 const UNVISITED_STYLE: PathOptions = {
   fillColor: MAP_COLORS.unvisited,
-  fillOpacity: 0.65,
+  fillOpacity: 0.35,
   color: MAP_COLORS.unvisitedBorder,
   weight: 1,
 }
@@ -23,18 +28,30 @@ type GeoMapProps = {
   geojsonUrl: string
   center: LatLngExpression
   zoom: number
+  minZoom?: number
+  maxZoom?: number
+  maxBounds?: LatLngBoundsExpression
   getFeatureId: (feature: GeoJSON.Feature) => string | undefined
   visitedIds: Set<string>
   onFeatureClick?: (id: string) => void
+  // featureFilterで表示対象を絞り込む場合、変更時にMapContainerを作り直す
+  // 必要があるため、その判定に使う文字列(例: 選択中の大陸名)
+  filterKey?: string
+  featureFilter?: (feature: GeoJSON.Feature) => boolean
 }
 
 export function GeoMap({
   geojsonUrl,
   center,
   zoom,
+  minZoom,
+  maxZoom,
+  maxBounds,
   getFeatureId,
   visitedIds,
   onFeatureClick,
+  filterKey,
+  featureFilter,
 }: GeoMapProps) {
   const geojson = useGeoJson(geojsonUrl)
 
@@ -65,18 +82,28 @@ export function GeoMap({
 
   return (
     <MapContainer
-      key={geojsonUrl}
+      key={`${geojsonUrl}:${filterKey ?? ''}`}
       center={center}
       zoom={zoom}
+      minZoom={minZoom}
+      maxZoom={maxZoom}
+      maxBounds={maxBounds}
+      maxBoundsViscosity={1.0}
+      zoomControl={false}
       style={{ height: '100%', width: '100%' }}
     >
       <TileLayer
-        url={DARK_TILE_URL}
-        attribution={DARK_TILE_ATTRIBUTION}
+        url={LIGHT_TILE_URL}
+        attribution={LIGHT_TILE_ATTRIBUTION}
         detectRetina
       />
       {geojson && (
-        <GeoJSON data={geojson} style={style} onEachFeature={onEachFeature} />
+        <GeoJSON
+          data={geojson}
+          style={style}
+          onEachFeature={onEachFeature}
+          filter={featureFilter}
+        />
       )}
     </MapContainer>
   )
