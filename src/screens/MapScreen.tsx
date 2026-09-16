@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { GeoMap } from '../components/GeoMap'
 import './MapScreen.css'
 
@@ -39,6 +40,9 @@ export function MapScreen() {
             {REGION_CONFIG[key].label}
           </button>
         ))}
+        <Link to="/records" className="map-screen__list-link">
+          記録一覧
+        </Link>
       </div>
       <div className="map-screen__map-area">
         <GeoMap
@@ -46,6 +50,9 @@ export function MapScreen() {
           center={config.center}
           zoom={config.zoom}
         />
+        <Link to="/records/new" className="map-screen__fab" aria-label="記録を作成">
+          +
+        </Link>
       </div>
     </div>
   )

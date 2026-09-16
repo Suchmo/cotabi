@@ -4,6 +4,8 @@ import { MapScreen } from './screens/MapScreen'
 import { StatsScreen } from './screens/StatsScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { LoginScreen } from './screens/LoginScreen'
+import { RecordFormScreen } from './screens/RecordFormScreen'
+import { RecordListScreen } from './screens/RecordListScreen'
 import { useAuth } from './hooks/useAuth'
 import './App.css'
 
@@ -26,6 +28,8 @@ function App() {
           <Route path="/map" element={<MapScreen />} />
           <Route path="/stats" element={<StatsScreen />} />
           <Route path="/settings" element={<SettingsScreen />} />
+          <Route path="/records/new" element={<RecordFormScreen />} />
+          <Route path="/records" element={<RecordListScreen />} />
         </Routes>
       </main>
       <BottomTabBar />
