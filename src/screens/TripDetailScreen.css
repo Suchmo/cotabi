@@ -1,0 +1,65 @@
+.trip-detail {
+  height: 100%;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.trip-detail__header {
+  margin-bottom: 16px;
+}
+
+.trip-detail__header a {
+  font-size: 13px;
+  color: inherit;
+}
+
+.trip-detail__header h1 {
+  margin: 8px 0 4px;
+}
+
+.trip-detail__meta {
+  font-size: 13px;
+  opacity: 0.7;
+  margin: 0;
+}
+
+.trip-detail__timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-detail__timeline-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--tab-border, #d0d0d0);
+  color: inherit;
+  text-decoration: none;
+}
+
+.trip-detail__timeline-item:last-child {
+  border-bottom: none;
+}
+
+.trip-detail__timeline-date {
+  flex-shrink: 0;
+  width: 84px;
+  font-size: 13px;
+  opacity: 0.7;
+  padding-top: 4px;
+}
+
+.trip-detail__timeline-thumb {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--tab-border, #d0d0d0);
+}
+
+.trip-detail__timeline-name {
+  align-self: center;
+  font-size: 15px;
+  font-weight: 600;
+}

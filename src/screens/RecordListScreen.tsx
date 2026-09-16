@@ -2,22 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listSpotsWithTrips, type SpotWithTripTitle } from '../lib/records'
 import { listPhotosBySpotId } from '../lib/photos'
-import { COUNTRIES } from '../lib/countries'
-import { JAPAN_PREFECTURES } from '../lib/japanPrefectures'
+import { formatLocationLabel } from '../lib/locationLabel'
 import type { Photo } from '../types/models'
 import './RecordListScreen.css'
 
-const countryNameByCode = new Map(COUNTRIES.map((c) => [c.code, c.name]))
-const prefectureNameByCode = new Map(
-  JAPAN_PREFECTURES.map((p) => [p.code, p.name]),
-)
-
 function locationLabel(spot: SpotWithTripTitle) {
-  const country = countryNameByCode.get(spot.countryCode) ?? spot.countryCode
-  const prefecture = spot.prefectureCode
-    ? (prefectureNameByCode.get(spot.prefectureCode) ?? spot.prefectureCode)
-    : null
-  return prefecture ? `${country} / ${prefecture}` : country
+  return formatLocationLabel(spot.countryCode, spot.prefectureCode)
 }
 
 export function RecordListScreen() {

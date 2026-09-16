@@ -7,7 +7,8 @@ import { LoginScreen } from './screens/LoginScreen'
 import { RecordFormScreen } from './screens/RecordFormScreen'
 import { RecordListScreen } from './screens/RecordListScreen'
 import { RegionDetailScreen } from './screens/RegionDetailScreen'
-import { TripSpotListScreen } from './screens/TripSpotListScreen'
+import { TripDetailScreen } from './screens/TripDetailScreen'
+import { SpotDetailScreen } from './screens/SpotDetailScreen'
 import { useAuth } from './hooks/useAuth'
 import './App.css'
 
@@ -33,7 +34,8 @@ function App() {
           <Route path="/records/new" element={<RecordFormScreen />} />
           <Route path="/records" element={<RecordListScreen />} />
           <Route path="/region/:kind/:code" element={<RegionDetailScreen />} />
-          <Route path="/trips/:tripId" element={<TripSpotListScreen />} />
+          <Route path="/trips/:tripId" element={<TripDetailScreen />} />
+          <Route path="/spots/:spotId" element={<SpotDetailScreen />} />
         </Routes>
       </main>
       <BottomTabBar />

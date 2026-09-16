@@ -8,7 +8,8 @@ import {
 } from 'firebase/firestore'
 import { db } from './firebase'
 import { spotFromDoc } from './firestoreMappers'
-import type { Spot } from '../types/models'
+import { listPhotosBySpotId } from './photos'
+import type { Photo, Spot } from '../types/models'
 
 const tripsCollection = collection(db, 'trips')
 const spotsCollection = collection(db, 'spots')
@@ -77,22 +78,66 @@ export async function listSpotsWithTrips(): Promise<SpotWithTripTitle[]> {
   })
 }
 
+export type SpotWithThumbnail = Spot & { thumbnailUrl: string | null }
+
 export async function getTripWithSpots(tripId: string): Promise<{
   title: string
-  spots: Spot[]
+  countryCode: string
+  prefectureCode: string | null
+  spots: SpotWithThumbnail[]
 } | null> {
-  const [tripsSnap, spotsSnap] = await Promise.all([
+  const [tripsSnap, spotsSnap, photosBySpotId] = await Promise.all([
     getDocs(tripsCollection),
     getDocs(spotsCollection),
+    listPhotosBySpotId(),
   ])
 
   const tripDoc = tripsSnap.docs.find((doc) => doc.id === tripId)
   if (!tripDoc) return null
+  const tripData = tripDoc.data()
 
   const spots = spotsSnap.docs
     .map(spotFromDoc)
     .filter((spot) => spot.tripId === tripId)
     .sort((a, b) => a.visitedAt.localeCompare(b.visitedAt))
+    .map((spot) => ({
+      ...spot,
+      thumbnailUrl: photosBySpotId.get(spot.id)?.[0]?.downloadUrl ?? null,
+    }))
 
-  return { title: tripDoc.data().title as string, spots }
+  return {
+    title: tripData.title as string,
+    countryCode: tripData.countryCode as string,
+    prefectureCode: (tripData.prefectureCode ?? null) as string | null,
+    spots,
+  }
+}
+
+export type SpotDetail = {
+  spot: Spot
+  tripTitle: string | null
+  photos: Photo[]
+}
+
+export async function getSpotDetail(spotId: string): Promise<SpotDetail | null> {
+  const [spotsSnap, tripsSnap, photosBySpotId] = await Promise.all([
+    getDocs(spotsCollection),
+    getDocs(tripsCollection),
+    listPhotosBySpotId(),
+  ])
+
+  const spotDoc = spotsSnap.docs.find((doc) => doc.id === spotId)
+  if (!spotDoc) return null
+
+  const spot = spotFromDoc(spotDoc)
+  const tripTitle = spot.tripId
+    ? ((tripsSnap.docs.find((doc) => doc.id === spot.tripId)?.data()
+        .title as string | undefined) ?? null)
+    : null
+
+  return {
+    spot,
+    tripTitle,
+    photos: photosBySpotId.get(spot.id) ?? [],
+  }
 }
