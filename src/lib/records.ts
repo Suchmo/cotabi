@@ -7,6 +7,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { db } from './firebase'
+import { spotFromDoc } from './firestoreMappers'
 import type { Spot } from '../types/models'
 
 const tripsCollection = collection(db, 'trips')
@@ -19,6 +20,8 @@ export type CreateRecordInput = {
   spotName: string
   visitedAt: string
   diaryText: string
+  latitude: number | null
+  longitude: number | null
   userId: string
   userEmail: string | null
 }
@@ -42,9 +45,8 @@ export async function createTripAndSpot(input: CreateRecordInput) {
     visitedAt: input.visitedAt,
     countryCode: input.countryCode,
     prefectureCode: input.prefectureCode,
-    // 写真アップロード同様、位置情報の取得は次のステップで対応する
-    latitude: null,
-    longitude: null,
+    latitude: input.latitude,
+    longitude: input.longitude,
     recordedBy: input.userId,
     recordedByEmail: input.userEmail,
     createdAt: serverTimestamp(),
@@ -67,22 +69,30 @@ export async function listSpotsWithTrips(): Promise<SpotWithTripTitle[]> {
   })
 
   return spotsSnap.docs.map((doc) => {
-    const data = doc.data()
-    const tripId = (data.tripId as string | null) ?? null
+    const spot = spotFromDoc(doc)
     return {
-      id: doc.id,
-      tripId,
-      name: data.name,
-      diaryText: data.diaryText,
-      visitedAt: data.visitedAt,
-      countryCode: data.countryCode,
-      prefectureCode: data.prefectureCode ?? null,
-      latitude: data.latitude ?? null,
-      longitude: data.longitude ?? null,
-      recordedBy: data.recordedBy,
-      recordedByEmail: data.recordedByEmail ?? null,
-      createdAt: data.createdAt ?? null,
-      tripTitle: tripId ? (tripTitleById.get(tripId) ?? null) : null,
+      ...spot,
+      tripTitle: spot.tripId ? (tripTitleById.get(spot.tripId) ?? null) : null,
     }
   })
+}
+
+export async function getTripWithSpots(tripId: string): Promise<{
+  title: string
+  spots: Spot[]
+} | null> {
+  const [tripsSnap, spotsSnap] = await Promise.all([
+    getDocs(tripsCollection),
+    getDocs(spotsCollection),
+  ])
+
+  const tripDoc = tripsSnap.docs.find((doc) => doc.id === tripId)
+  if (!tripDoc) return null
+
+  const spots = spotsSnap.docs
+    .map(spotFromDoc)
+    .filter((spot) => spot.tripId === tripId)
+    .sort((a, b) => a.visitedAt.localeCompare(b.visitedAt))
+
+  return { title: tripDoc.data().title as string, spots }
 }

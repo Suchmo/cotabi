@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet'
-import type { LatLngExpression, PathOptions } from 'leaflet'
+import type { Layer, LatLngExpression, PathOptions } from 'leaflet'
 import { useGeoJson } from '../hooks/useGeoJson'
 
 const VISITED_STYLE: PathOptions = {
@@ -23,6 +23,7 @@ type GeoMapProps = {
   zoom: number
   getFeatureId: (feature: GeoJSON.Feature) => string | undefined
   visitedIds: Set<string>
+  onFeatureClick?: (id: string) => void
 }
 
 export function GeoMap({
@@ -31,6 +32,7 @@ export function GeoMap({
   zoom,
   getFeatureId,
   visitedIds,
+  onFeatureClick,
 }: GeoMapProps) {
   const geojson = useGeoJson(geojsonUrl)
 
@@ -43,6 +45,22 @@ export function GeoMap({
     // (中身が変わったのに参照が同じでスタイル更新が漏れることを避ける)
   }, [getFeatureId, visitedIds])
 
+  // onEachFeatureはfeatureごとに1度しか呼ばれない(react-leafletがGeoJSON層を
+  // 再構築しない限り更新されない)ため、常に最新のgetFeatureId/onFeatureClickを
+  // ref経由で参照し、クロージャが古い値を握ったままにならないようにする。
+  const latestHandlers = useRef({ getFeatureId, onFeatureClick })
+  latestHandlers.current = { getFeatureId, onFeatureClick }
+
+  const onEachFeature = useMemo(() => {
+    return (feature: GeoJSON.Feature, layer: Layer) => {
+      layer.on('click', () => {
+        const { getFeatureId, onFeatureClick } = latestHandlers.current
+        const id = getFeatureId(feature)
+        if (id && onFeatureClick) onFeatureClick(id)
+      })
+    }
+  }, [])
+
   return (
     <MapContainer
       key={geojsonUrl}
@@ -54,7 +72,9 @@ export function GeoMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap contributors"
       />
-      {geojson && <GeoJSON data={geojson} style={style} />}
+      {geojson && (
+        <GeoJSON data={geojson} style={style} onEachFeature={onEachFeature} />
+      )}
     </MapContainer>
   )
 }

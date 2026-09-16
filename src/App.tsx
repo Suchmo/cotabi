@@ -6,6 +6,8 @@ import { SettingsScreen } from './screens/SettingsScreen'
 import { LoginScreen } from './screens/LoginScreen'
 import { RecordFormScreen } from './screens/RecordFormScreen'
 import { RecordListScreen } from './screens/RecordListScreen'
+import { RegionDetailScreen } from './screens/RegionDetailScreen'
+import { TripSpotListScreen } from './screens/TripSpotListScreen'
 import { useAuth } from './hooks/useAuth'
 import './App.css'
 
@@ -30,6 +32,8 @@ function App() {
           <Route path="/settings" element={<SettingsScreen />} />
           <Route path="/records/new" element={<RecordFormScreen />} />
           <Route path="/records" element={<RecordListScreen />} />
+          <Route path="/region/:kind/:code" element={<RegionDetailScreen />} />
+          <Route path="/trips/:tripId" element={<TripSpotListScreen />} />
         </Routes>
       </main>
       <BottomTabBar />

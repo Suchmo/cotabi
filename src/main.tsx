@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import 'leaflet/dist/leaflet.css'
 import './index.css'
 import './lib/firebase'
+import './lib/leafletIconFix'
 import { AuthProvider } from './contexts/AuthContext'
 import App from './App.tsx'
 

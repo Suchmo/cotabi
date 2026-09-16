@@ -22,10 +22,37 @@ export function RecordFormScreen() {
   const [visitedAt, setVisitedAt] = useState(todayAsDateInputValue())
   const [diaryText, setDiaryText] = useState('')
   const [photos, setPhotos] = useState<File[]>([])
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
+    null,
+  )
+  const [locationError, setLocationError] = useState<string | null>(null)
+  const [locating, setLocating] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const isJapan = countryCode === JAPAN_COUNTRY_CODE
+
+  const captureLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('この端末では位置情報を取得できません。')
+      return
+    }
+    setLocating(true)
+    setLocationError(null)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        })
+        setLocating(false)
+      },
+      () => {
+        setLocationError('位置情報の取得に失敗しました。')
+        setLocating(false)
+      },
+    )
+  }
 
   const previewUrls = usePhotoPreviews(photos)
 
@@ -55,6 +82,8 @@ export function RecordFormScreen() {
         spotName,
         visitedAt,
         diaryText,
+        latitude: location?.lat ?? null,
+        longitude: location?.lng ?? null,
         userId: user.uid,
         userEmail: user.email,
       })
@@ -137,6 +166,21 @@ export function RecordFormScreen() {
             onChange={(e) => setDiaryText(e.target.value)}
           />
         </label>
+
+        <div className="record-form__location">
+          <span className="record-form__photos-label">位置情報(任意)</span>
+          <p className="record-form__location-status">
+            {location
+              ? `取得済み: ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`
+              : '未取得(地図でのルート表示に使われます)'}
+          </p>
+          <button type="button" onClick={captureLocation} disabled={locating}>
+            {locating ? '取得中…' : '現在地を取得'}
+          </button>
+          {locationError && (
+            <p className="record-form__error">{locationError}</p>
+          )}
+        </div>
 
         <div className="record-form__photos">
           <span className="record-form__photos-label">写真</span>
