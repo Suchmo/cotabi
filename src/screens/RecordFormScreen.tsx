@@ -29,43 +29,17 @@ export function RecordFormScreen() {
 
   const previewUrls = usePhotoPreviews(photos)
 
-  const addPhotos = (source: string) => (e: ChangeEvent<HTMLInputElement>) => {
-    console.log(`[RecordForm] addPhotos onChange fired (source=${source})`, e.target)
+  const addPhotos = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
-    console.log(`[RecordForm] e.target.files =`, files, 'length =', files?.length)
-    if (!files || files.length === 0) {
-      console.log('[RecordForm] no files selected, aborting')
-      return
-    }
+    if (!files || files.length === 0) return
     const fileArray = Array.from(files)
-    console.log(
-      '[RecordForm] files as array:',
-      fileArray.map((f) => ({ name: f.name, type: f.type, size: f.size })),
-    )
-    setPhotos((prev) => {
-      const next = [...prev, ...fileArray]
-      console.log(
-        '[RecordForm] setPhotos updater: prev.length =',
-        prev.length,
-        '-> next.length =',
-        next.length,
-      )
-      return next
-    })
+    setPhotos((prev) => [...prev, ...fileArray])
     e.target.value = ''
   }
 
   const removePhoto = (index: number) => {
-    console.log('[RecordForm] removePhoto called for index', index)
     setPhotos((prev) => prev.filter((_, i) => i !== index))
   }
-
-  console.log(
-    '[RecordForm] render: photos.length =',
-    photos.length,
-    'previewUrls.length =',
-    previewUrls.length,
-  )
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -185,7 +159,7 @@ export function RecordFormScreen() {
                 type="file"
                 accept="image/*"
                 multiple
-                onChange={addPhotos('album')}
+                onChange={addPhotos}
                 hidden
               />
             </label>
@@ -195,7 +169,7 @@ export function RecordFormScreen() {
                 type="file"
                 accept="image/*"
                 capture="environment"
-                onChange={addPhotos('camera')}
+                onChange={addPhotos}
                 hidden
               />
             </label>
@@ -215,15 +189,9 @@ function usePhotoPreviews(files: File[]): string[] {
   const [urls, setUrls] = useState<string[]>([])
 
   useEffect(() => {
-    console.log(
-      '[RecordForm] usePhotoPreviews effect running, files.length =',
-      files.length,
-    )
     const nextUrls = files.map((file) => URL.createObjectURL(file))
-    console.log('[RecordForm] usePhotoPreviews generated urls:', nextUrls)
     setUrls(nextUrls)
     return () => {
-      console.log('[RecordForm] usePhotoPreviews cleanup, revoking:', nextUrls)
       nextUrls.forEach((url) => URL.revokeObjectURL(url))
     }
   }, [files])
