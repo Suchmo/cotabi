@@ -1,16 +1,17 @@
 import L from 'leaflet'
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 
 // LeafletのデフォルトマーカーアイコンはCSSではなく相対URLで画像を参照しており、
-// Viteのバンドル環境ではそのままだと画像が壊れる。ビルド済みアセットのURLを
-// 明示的に指定して修正する(既知のLeaflet+バンドラー問題への定番対応)。
+// Viteのバンドル環境ではそのままだと画像が壊れる。ここではCOTABI用に用意した
+// ゴールド基調のカスタムピン画像(public/marker-icon.png, marker-icon-2x.png)を
+// 使うよう差し替える。design_system.mdの「影を使わない」方針に沿って、
+// シャドウ画像(marker-shadow.png)は使用しない。
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })
   ._getIconUrl
 
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
+  iconRetinaUrl: '/marker-icon-2x.png',
+  iconUrl: '/marker-icon.png',
+  shadowUrl: undefined,
+  shadowSize: undefined,
+  shadowAnchor: undefined,
 })
