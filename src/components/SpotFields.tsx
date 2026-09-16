@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent } from 'react'
-import { X, ImagePlus, Camera, MapPin } from 'lucide-react'
+import { X, ImagePlus, Camera, MapPin, Search } from 'lucide-react'
 import { Combobox, type ComboboxOption } from './Combobox'
+import { searchPlaces, type PlaceResult } from '../lib/nominatim'
 import { COUNTRIES } from '../lib/countries'
 import { JAPAN_COUNTRY_CODE, JAPAN_PREFECTURES } from '../lib/japanPrefectures'
 
@@ -13,6 +14,8 @@ const PREFECTURE_OPTIONS: ComboboxOption[] = [
   { value: '', label: '(未選択)' },
   ...JAPAN_PREFECTURES.map((p) => ({ value: p.code, label: p.name })),
 ]
+
+const PLACE_SEARCH_DEBOUNCE_MS = 600
 
 export type SpotFieldsValue = {
   countryCode: string
@@ -49,6 +52,11 @@ export function SpotFields({ value, onChange }: SpotFieldsProps) {
   const [locating, setLocating] = useState(false)
   const previewUrls = usePhotoPreviews(value.photos)
 
+  const [placeQuery, setPlaceQuery] = useState('')
+  const [placeResults, setPlaceResults] = useState<PlaceResult[]>([])
+  const [placeSearching, setPlaceSearching] = useState(false)
+  const [placeError, setPlaceError] = useState<string | null>(null)
+
   const isJapan = value.countryCode === JAPAN_COUNTRY_CODE
 
   const captureLocation = () => {
@@ -73,6 +81,50 @@ export function SpotFields({ value, onChange }: SpotFieldsProps) {
         setLocating(false)
       },
     )
+  }
+
+  // Nominatimの利用規約に沿って、入力が止まってから1回だけ検索する
+  // (デバウンス)。検索中に新しい入力が来たら、前のリクエストは中断する。
+  useEffect(() => {
+    if (placeQuery.trim().length < 2) {
+      setPlaceResults([])
+      setPlaceError(null)
+      return
+    }
+
+    const controller = new AbortController()
+    const timer = window.setTimeout(async () => {
+      setPlaceSearching(true)
+      setPlaceError(null)
+      try {
+        const results = await searchPlaces(placeQuery, controller.signal)
+        setPlaceResults(results)
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          setPlaceError('検索に失敗しました。')
+        }
+      } finally {
+        setPlaceSearching(false)
+      }
+    }, PLACE_SEARCH_DEBOUNCE_MS)
+
+    return () => {
+      window.clearTimeout(timer)
+      controller.abort()
+    }
+  }, [placeQuery])
+
+  const handleSelectPlace = (place: PlaceResult) => {
+    onChange({
+      location: { lat: place.lat, lng: place.lon },
+      ...(place.countryCode ? { countryCode: place.countryCode } : {}),
+      ...(place.countryCode && place.countryCode !== JAPAN_COUNTRY_CODE
+        ? { prefectureCode: '' }
+        : {}),
+      ...(place.prefectureCode ? { prefectureCode: place.prefectureCode } : {}),
+    })
+    setPlaceQuery(place.displayName)
+    setPlaceResults([])
   }
 
   const addPhotos = (e: ChangeEvent<HTMLInputElement>) => {
@@ -146,6 +198,39 @@ export function SpotFields({ value, onChange }: SpotFieldsProps) {
           {locating ? '取得中…' : '現在地を取得'}
         </button>
         {locationError && <p className="record-form__error">{locationError}</p>}
+
+        <div className="record-form__place-search">
+          <div className="record-form__place-search-input">
+            <Search size={14} strokeWidth={1.5} />
+            <input
+              type="text"
+              placeholder="場所を検索(例: 東京タワー)"
+              value={placeQuery}
+              onChange={(e) => setPlaceQuery(e.target.value)}
+            />
+          </div>
+          {placeSearching && (
+            <p className="record-form__location-status">検索中…</p>
+          )}
+          {placeError && <p className="record-form__error">{placeError}</p>}
+          {placeResults.length > 0 && (
+            <ul className="record-form__place-results">
+              {placeResults.map((place) => (
+                <li key={`${place.lat},${place.lon}`}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPlace(place)}
+                  >
+                    {place.displayName}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="record-form__attribution">
+            位置情報検索: OpenStreetMap Nominatim
+          </p>
+        </div>
       </div>
 
       <div className="record-form__photos">
