@@ -6,6 +6,7 @@
 - `docs/requirements_v5.md` … 要件定義書(目的・コスト方針・アプリ形態・フェーズ別機能要件・技術スタック)
 - `docs/screen_design_v4.md` … 画面設計・データモデル仕様書(Phase1確定版。画面構成・データモデルはv3から変更なし、実装技術の読み替えのみ)
 - `docs/setup_guide_v2.md` … 環境構築手順書(PWA方針での最新セットアップ手順、進捗状況)
+- `docs/architecture.md` … システム構成図(開発・デプロイ・利用時のデータの流れ、全体構成、現在の構成に至った経緯)
 
 過去バージョン(`requirements_v4.md`, `screen_design_v3.md`, `setup_guide.md` 等)がリポジトリに残っている場合、それらはネイティブiOS(SwiftUI/Xcode)時代の古い方針であり、**現在は無効**。参照する場合は上記の最新版のみとすること。
 
