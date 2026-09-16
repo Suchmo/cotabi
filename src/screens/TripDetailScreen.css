@@ -40,9 +40,9 @@
 }
 
 .trip-detail__view-toggle button.is-selected {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #fff;
+  background: #c4a45c;
+  border-color: #c4a45c;
+  color: #11141a;
   font-weight: 600;
 }
 

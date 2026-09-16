@@ -22,9 +22,9 @@
 }
 
 .map-screen__region-toggle button.is-selected {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #fff;
+  background: #c4a45c;
+  border-color: #c4a45c;
+  color: #11141a;
   font-weight: 600;
 }
 
@@ -55,8 +55,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #2563eb;
-  color: #fff;
+  background: #c4a45c;
+  color: #11141a;
   font-size: 24px;
   line-height: 1;
   text-decoration: none;

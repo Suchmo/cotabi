@@ -4,9 +4,9 @@ import type { Layer, LatLngExpression, PathOptions } from 'leaflet'
 import { useGeoJson } from '../hooks/useGeoJson'
 
 const VISITED_STYLE: PathOptions = {
-  fillColor: '#2563eb',
+  fillColor: '#c4a45c',
   fillOpacity: 0.55,
-  color: '#1d4ed8',
+  color: '#a3823f',
   weight: 1,
 }
 
