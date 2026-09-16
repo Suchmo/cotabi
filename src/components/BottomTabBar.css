@@ -1,0 +1,24 @@
+.bottom-tab-bar {
+  display: flex;
+  flex-shrink: 0;
+  border-top: 1px solid var(--tab-border, #d0d0d0);
+  background: var(--tab-bg, #fff);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-tab-bar a {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+  font-size: 12px;
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.bottom-tab-bar a.active {
+  opacity: 1;
+  font-weight: 600;
+}
