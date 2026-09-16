@@ -5,10 +5,11 @@ export type Country = {
 
 // Natural Earth ne_50m_admin_0_countries (public/geo/world-countries.geojson) から
 // ISO_A2_EH と NAME_JA(日本語名)を抽出して生成。3つの非承認地域(ISO_A2_EHが取得できない)は除外。
+// 同じISO_A2_EHを共有する属領・従属地域(例: オーストラリア本土とアシュモア・カルティエ諸島)は
+// TYPEが「Sovereign country」/「Country」のエントリを優先して1件に統合している。
 export const COUNTRIES: Country[] = [
   { code: "IS", name: "アイスランド" },
   { code: "IE", name: "アイルランド" },
-  { code: "AU", name: "アシュモア・カルティエ諸島" },
   { code: "AZ", name: "アゼルバイジャン" },
   { code: "AF", name: "アフガニスタン" },
   { code: "US", name: "アメリカ合衆国" },
@@ -47,7 +48,6 @@ export const COUNTRIES: Country[] = [
   { code: "ER", name: "エリトリア" },
   { code: "SV", name: "エルサルバドル" },
   { code: "AU", name: "オーストラリア" },
-  { code: "AU", name: "オーストラリア領インド洋地域" },
   { code: "AT", name: "オーストリア" },
   { code: "AX", name: "オーランド諸島" },
   { code: "OM", name: "オマーン" },
