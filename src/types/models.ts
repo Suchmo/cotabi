@@ -31,3 +31,14 @@ export type Spot = {
   recordedByEmail: string | null
   createdAt: Timestamp | null
 }
+
+// docs/screen_design_v4.md のER図(PHOTO)に対応。
+// downloadUrl はER図にはないが、Storageから毎回getDownloadURLし直さずに
+// 一覧表示できるよう、アップロード時に取得したURLを保持する。
+export type Photo = {
+  id: string
+  spotId: string
+  storagePath: string
+  downloadUrl: string
+  uploadedAt: Timestamp | null
+}

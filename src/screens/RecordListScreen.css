@@ -21,6 +21,20 @@
   margin: 0 0 8px;
 }
 
+.record-list__photo-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.record-list__photo-thumb {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
 .record-list__diary {
   white-space: pre-wrap;
   margin: 0;

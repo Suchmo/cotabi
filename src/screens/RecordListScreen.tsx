@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listSpotsWithTrips, type SpotWithTripTitle } from '../lib/records'
+import { listPhotosBySpotId } from '../lib/photos'
 import { COUNTRIES } from '../lib/countries'
 import { JAPAN_PREFECTURES } from '../lib/japanPrefectures'
+import type { Photo } from '../types/models'
 import './RecordListScreen.css'
 
 const countryNameByCode = new Map(COUNTRIES.map((c) => [c.code, c.name]))
@@ -20,11 +22,17 @@ function locationLabel(spot: SpotWithTripTitle) {
 
 export function RecordListScreen() {
   const [spots, setSpots] = useState<SpotWithTripTitle[] | null>(null)
+  const [photosBySpotId, setPhotosBySpotId] = useState<Map<string, Photo[]>>(
+    new Map(),
+  )
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    listSpotsWithTrips()
-      .then(setSpots)
+    Promise.all([listSpotsWithTrips(), listPhotosBySpotId()])
+      .then(([spots, photos]) => {
+        setSpots(spots)
+        setPhotosBySpotId(photos)
+      })
       .catch(() => setError('記録の取得に失敗しました。'))
   }, [])
 
@@ -37,16 +45,31 @@ export function RecordListScreen() {
       {error && <p>{error}</p>}
       {!error && spots === null && <p>読み込み中…</p>}
       {spots?.length === 0 && <p>まだ記録がありません。</p>}
-      {spots?.map((spot) => (
-        <div key={spot.id} className="record-list__item">
-          <h3>{spot.tripTitle ?? spot.name}</h3>
-          <p className="record-list__meta">
-            {locationLabel(spot)} ・ {spot.name} ・ {spot.visitedAt} ・{' '}
-            {spot.recordedByEmail ?? spot.recordedBy}
-          </p>
-          <p className="record-list__diary">{spot.diaryText}</p>
-        </div>
-      ))}
+      {spots?.map((spot) => {
+        const photos = photosBySpotId.get(spot.id) ?? []
+        return (
+          <div key={spot.id} className="record-list__item">
+            <h3>{spot.tripTitle ?? spot.name}</h3>
+            <p className="record-list__meta">
+              {locationLabel(spot)} ・ {spot.name} ・ {spot.visitedAt} ・{' '}
+              {spot.recordedByEmail ?? spot.recordedBy}
+            </p>
+            {photos.length > 0 && (
+              <div className="record-list__photo-grid">
+                {photos.map((photo) => (
+                  <img
+                    key={photo.id}
+                    src={photo.downloadUrl}
+                    alt=""
+                    className="record-list__photo-thumb"
+                  />
+                ))}
+              </div>
+            )}
+            <p className="record-list__diary">{spot.diaryText}</p>
+          </div>
+        )
+      })}
     </div>
   )
 }

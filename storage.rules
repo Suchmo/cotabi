@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// firestore.rules と同じ考え方: 新規登録なし・2アカウントのみ手動作成のため、
+// 認証済みであることがそのまま「本人か彼女のどちらかであること」の判定になる。
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

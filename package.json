@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "firebase:login": "firebase login",
-    "deploy:rules": "firebase deploy --only firestore:rules"
+    "deploy:rules": "firebase deploy --only firestore:rules,storage:rules"
   },
   "dependencies": {
     "firebase": "^12.19.0",
