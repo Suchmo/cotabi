@@ -77,6 +77,60 @@
   opacity: 0.4;
 }
 
+.record-form__date-range {
+  display: flex;
+  gap: 12px;
+}
+
+.record-form__date-range label {
+  flex: 1;
+}
+
+.record-form__spot-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-card);
+  padding: 14px;
+}
+
+.record-form__spot-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.record-form__spot-block-header h3 {
+  color: var(--color-text);
+}
+
+.record-form__spot-block-header button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-size: 12px;
+  color: var(--color-danger);
+}
+
+.record-form__add-spot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
 .record-form__error {
   color: var(--color-danger);
   font-size: 13px;

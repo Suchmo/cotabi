@@ -1,10 +1,12 @@
 import {
   addDoc,
   collection,
+  doc,
   getDocs,
   orderBy,
   query,
   serverTimestamp,
+  writeBatch,
 } from 'firebase/firestore'
 import { db } from './firebase'
 import { spotFromDoc, tripFromDoc } from './firestoreMappers'
@@ -14,8 +16,7 @@ import type { Photo, Spot, Trip } from '../types/models'
 const tripsCollection = collection(db, 'trips')
 const spotsCollection = collection(db, 'spots')
 
-export type CreateRecordInput = {
-  tripTitle: string
+export type SpotInput = {
   countryCode: string
   prefectureCode: string | null
   spotName: string
@@ -23,37 +24,65 @@ export type CreateRecordInput = {
   diaryText: string
   latitude: number | null
   longitude: number | null
+}
+
+export type CreateTripInput = {
+  tripTitle: string
+  // 空ならスポットの日付から自動算出する
+  startDate: string | null
+  endDate: string | null
+  spots: SpotInput[]
   userId: string
   userEmail: string | null
 }
 
-export async function createTripAndSpot(input: CreateRecordInput) {
-  const tripRef = await addDoc(tripsCollection, {
+// 「新しい旅行を作る」フロー。1つの旅行に複数スポットをまとめて登録できる
+// (例: 「ヨーロッパ旅行」にイタリア・スイス・フランスのスポットを一度に追加)。
+// 旅行ドキュメントとスポットドキュメント群を1つのバッチとして書き込み、
+// 途中で失敗して旅行だけ・一部スポットだけが残ることがないようにする。
+export async function createTripWithSpots(input: CreateTripInput): Promise<{
+  tripId: string
+  spotIds: string[]
+}> {
+  const batch = writeBatch(db)
+
+  const tripRef = doc(tripsCollection)
+  const visitedDates = input.spots.map((s) => s.visitedAt).sort()
+  const firstSpot = input.spots[0]
+
+  batch.set(tripRef, {
     title: input.tripTitle,
-    countryCode: input.countryCode,
-    prefectureCode: input.prefectureCode,
-    startDate: input.visitedAt,
-    endDate: input.visitedAt,
+    countryCode: firstSpot.countryCode,
+    prefectureCode: firstSpot.prefectureCode,
+    startDate: input.startDate || visitedDates[0],
+    endDate: input.endDate || visitedDates[visitedDates.length - 1],
     createdBy: input.userId,
     createdByEmail: input.userEmail,
     createdAt: serverTimestamp(),
   })
 
-  const spotRef = await addDoc(spotsCollection, {
-    tripId: tripRef.id,
-    name: input.spotName,
-    diaryText: input.diaryText,
-    visitedAt: input.visitedAt,
-    countryCode: input.countryCode,
-    prefectureCode: input.prefectureCode,
-    latitude: input.latitude,
-    longitude: input.longitude,
-    recordedBy: input.userId,
-    recordedByEmail: input.userEmail,
-    createdAt: serverTimestamp(),
-  })
+  const spotIds: string[] = []
+  for (const spot of input.spots) {
+    const spotRef = doc(spotsCollection)
+    batch.set(spotRef, {
+      tripId: tripRef.id,
+      name: spot.spotName,
+      diaryText: spot.diaryText,
+      visitedAt: spot.visitedAt,
+      countryCode: spot.countryCode,
+      prefectureCode: spot.prefectureCode,
+      latitude: spot.latitude,
+      longitude: spot.longitude,
+      recordedBy: input.userId,
+      recordedByEmail: input.userEmail,
+      createdAt: serverTimestamp(),
+    })
+    spotIds.push(spotRef.id)
+  }
 
-  return { tripId: tripRef.id, spotId: spotRef.id }
+  await batch.commit()
+
+  return { tripId: tripRef.id, spotIds }
 }
 
 export async function listTrips(): Promise<Trip[]> {

@@ -1,18 +1,37 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { X, ImagePlus, Camera, MapPin } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { addSpotToTrip, createTripAndSpot, listTrips } from '../lib/records'
+import { addSpotToTrip, createTripWithSpots, listTrips } from '../lib/records'
 import { uploadPhotosForSpot } from '../lib/photos'
-import { COUNTRIES } from '../lib/countries'
-import { JAPAN_COUNTRY_CODE, JAPAN_PREFECTURES } from '../lib/japanPrefectures'
+import {
+  SpotFields,
+  createEmptySpotFieldsValue,
+  type SpotFieldsValue,
+} from '../components/SpotFields'
+import { JAPAN_COUNTRY_CODE } from '../lib/japanPrefectures'
 import type { Trip } from '../types/models'
 import './RecordFormScreen.css'
 
 type Mode = 'new-trip' | 'existing-trip'
 
+type SpotBlock = SpotFieldsValue & { id: string }
+
 function todayAsDateInputValue() {
   return new Date().toISOString().slice(0, 10)
+}
+
+function toSpotInput(block: SpotFieldsValue) {
+  const isJapan = block.countryCode === JAPAN_COUNTRY_CODE
+  return {
+    countryCode: block.countryCode,
+    prefectureCode: isJapan && block.prefectureCode ? block.prefectureCode : null,
+    spotName: block.spotName,
+    visitedAt: block.visitedAt,
+    diaryText: block.diaryText,
+    latitude: block.location?.lat ?? null,
+    longitude: block.location?.lng ?? null,
+  }
 }
 
 export function RecordFormScreen() {
@@ -24,21 +43,18 @@ export function RecordFormScreen() {
   const [selectedTripId, setSelectedTripId] = useState('')
 
   const [tripTitle, setTripTitle] = useState('')
-  const [countryCode, setCountryCode] = useState(JAPAN_COUNTRY_CODE)
-  const [prefectureCode, setPrefectureCode] = useState('')
-  const [spotName, setSpotName] = useState('')
-  const [visitedAt, setVisitedAt] = useState(todayAsDateInputValue())
-  const [diaryText, setDiaryText] = useState('')
-  const [photos, setPhotos] = useState<File[]>([])
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
-    null,
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [spotBlocks, setSpotBlocks] = useState<SpotBlock[]>([
+    { id: crypto.randomUUID(), ...createEmptySpotFieldsValue(todayAsDateInputValue()) },
+  ])
+
+  const [existingSpot, setExistingSpot] = useState<SpotFieldsValue>(
+    createEmptySpotFieldsValue(todayAsDateInputValue()),
   )
-  const [locationError, setLocationError] = useState<string | null>(null)
-  const [locating, setLocating] = useState(false)
+
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const isJapan = countryCode === JAPAN_COUNTRY_CODE
 
   useEffect(() => {
     listTrips().then((result) => {
@@ -47,41 +63,29 @@ export function RecordFormScreen() {
     })
   }, [])
 
-  const captureLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationError('この端末では位置情報を取得できません。')
-      return
-    }
-    setLocating(true)
-    setLocationError(null)
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        })
-        setLocating(false)
-      },
-      () => {
-        setLocationError('位置情報の取得に失敗しました。')
-        setLocating(false)
-      },
+  const updateSpotBlock = (id: string, patch: Partial<SpotFieldsValue>) => {
+    setSpotBlocks((prev) =>
+      prev.map((block) => (block.id === id ? { ...block, ...patch } : block)),
     )
   }
 
-  const previewUrls = usePhotoPreviews(photos)
-
-  const addPhotos = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
-    const fileArray = Array.from(files)
-    setPhotos((prev) => [...prev, ...fileArray])
-    e.target.value = ''
+  const addSpotBlock = () => {
+    setSpotBlocks((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        ...createEmptySpotFieldsValue(todayAsDateInputValue()),
+      },
+    ])
   }
 
-  const removePhoto = (index: number) => {
-    setPhotos((prev) => prev.filter((_, i) => i !== index))
+  const removeSpotBlock = (id: string) => {
+    setSpotBlocks((prev) =>
+      prev.length > 1 ? prev.filter((block) => block.id !== id) : prev,
+    )
   }
+
+  const hasExistingTrips = (trips?.length ?? 0) > 0
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -91,25 +95,33 @@ export function RecordFormScreen() {
     setSubmitting(true)
     setError(null)
     try {
-      const spotInput = {
-        countryCode,
-        prefectureCode: isJapan && prefectureCode ? prefectureCode : null,
-        spotName,
-        visitedAt,
-        diaryText,
-        latitude: location?.lat ?? null,
-        longitude: location?.lng ?? null,
-        userId: user.uid,
-        userEmail: user.email,
-      }
+      if (mode === 'new-trip') {
+        const { spotIds } = await createTripWithSpots({
+          tripTitle,
+          startDate: startDate || null,
+          endDate: endDate || null,
+          spots: spotBlocks.map(toSpotInput),
+          userId: user.uid,
+          userEmail: user.email,
+        })
 
-      const { spotId } =
-        mode === 'new-trip'
-          ? await createTripAndSpot({ tripTitle, ...spotInput })
-          : await addSpotToTrip({ tripId: selectedTripId, ...spotInput })
-
-      if (photos.length > 0) {
-        await uploadPhotosForSpot(spotId, photos)
+        await Promise.all(
+          spotBlocks.map((block, i) =>
+            block.photos.length > 0
+              ? uploadPhotosForSpot(spotIds[i], block.photos)
+              : Promise.resolve(),
+          ),
+        )
+      } else {
+        const { spotId } = await addSpotToTrip({
+          tripId: selectedTripId,
+          ...toSpotInput(existingSpot),
+          userId: user.uid,
+          userEmail: user.email,
+        })
+        if (existingSpot.photos.length > 0) {
+          await uploadPhotosForSpot(spotId, existingSpot.photos)
+        }
       }
       navigate('/records')
     } catch {
@@ -118,8 +130,6 @@ export function RecordFormScreen() {
       setSubmitting(false)
     }
   }
-
-  const hasExistingTrips = (trips?.length ?? 0) > 0
 
   return (
     <div className="record-form">
@@ -144,151 +154,96 @@ export function RecordFormScreen() {
         </div>
 
         {mode === 'new-trip' ? (
-          <label>
-            旅行名
-            <input
-              required
-              value={tripTitle}
-              onChange={(e) => setTripTitle(e.target.value)}
-            />
-          </label>
-        ) : (
-          <label>
-            旅行を選択
-            {trips === null ? (
-              <p className="record-form__location-status">読み込み中…</p>
-            ) : trips.length === 0 ? (
-              <p className="record-form__location-status">
-                まだ旅行がありません。「新しい旅行を作る」から始めてください。
-              </p>
-            ) : (
-              <select
+          <>
+            <label>
+              旅行名
+              <input
                 required
-                value={selectedTripId}
-                onChange={(e) => setSelectedTripId(e.target.value)}
-              >
-                {trips.map((trip) => (
-                  <option key={trip.id} value={trip.id}>
-                    {trip.title}
-                  </option>
-                ))}
-              </select>
-            )}
-          </label>
-        )}
-
-        <label>
-          国
-          <select
-            value={countryCode}
-            onChange={(e) => {
-              setCountryCode(e.target.value)
-              setPrefectureCode('')
-            }}
-          >
-            {COUNTRIES.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        {isJapan && (
-          <label>
-            都道府県
-            <select
-              value={prefectureCode}
-              onChange={(e) => setPrefectureCode(e.target.value)}
-            >
-              <option value="">(未選択)</option>
-              {JAPAN_PREFECTURES.map((p) => (
-                <option key={p.code} value={p.code}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        <label>
-          スポット名
-          <input
-            required
-            value={spotName}
-            onChange={(e) => setSpotName(e.target.value)}
-          />
-        </label>
-        <label>
-          日付
-          <input
-            type="date"
-            required
-            value={visitedAt}
-            onChange={(e) => setVisitedAt(e.target.value)}
-          />
-        </label>
-        <label>
-          日記文章
-          <textarea
-            value={diaryText}
-            onChange={(e) => setDiaryText(e.target.value)}
-          />
-        </label>
-
-        <div className="record-form__location">
-          <span className="record-form__photos-label">位置情報(任意)</span>
-          <p className="record-form__location-status">
-            {location
-              ? `取得済み: ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`
-              : '未取得(地図でのルート表示に使われます)'}
-          </p>
-          <button type="button" onClick={captureLocation} disabled={locating}>
-            <MapPin size={14} strokeWidth={1.5} />
-            {locating ? '取得中…' : '現在地を取得'}
-          </button>
-          {locationError && (
-            <p className="record-form__error">{locationError}</p>
-          )}
-        </div>
-
-        <div className="record-form__photos">
-          <span className="record-form__photos-label">写真</span>
-          {previewUrls.length > 0 && (
-            <div className="record-form__photo-grid">
-              {previewUrls.map((url, i) => (
-                <div key={url} className="record-form__photo-thumb">
-                  <img src={url} alt="" />
-                  <button type="button" onClick={() => removePhoto(i)}>
-                    <X size={14} strokeWidth={2} />
-                  </button>
-                </div>
-              ))}
+                value={tripTitle}
+                onChange={(e) => setTripTitle(e.target.value)}
+              />
+            </label>
+            <div className="record-form__date-range">
+              <label>
+                開始日(任意)
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </label>
+              <label>
+                終了日(任意)
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </label>
             </div>
-          )}
-          <div className="record-form__photo-buttons">
-            <label className="record-form__photo-button">
-              <ImagePlus size={16} strokeWidth={1.5} />
-              アルバムから選択
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={addPhotos}
-                hidden
-              />
+
+            {spotBlocks.map((block, index) => (
+              <div key={block.id} className="record-form__spot-block">
+                <div className="record-form__spot-block-header">
+                  <h3>スポット {index + 1}</h3>
+                  {spotBlocks.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeSpotBlock(block.id)}
+                    >
+                      <Trash2 size={14} strokeWidth={1.5} />
+                      削除
+                    </button>
+                  )}
+                </div>
+                <SpotFields
+                  value={block}
+                  onChange={(patch) => updateSpotBlock(block.id, patch)}
+                />
+              </div>
+            ))}
+
+            <button
+              type="button"
+              className="record-form__add-spot"
+              onClick={addSpotBlock}
+            >
+              <Plus size={16} strokeWidth={1.5} />
+              スポットを追加
+            </button>
+          </>
+        ) : (
+          <>
+            <label>
+              旅行を選択
+              {trips === null ? (
+                <p className="record-form__location-status">読み込み中…</p>
+              ) : trips.length === 0 ? (
+                <p className="record-form__location-status">
+                  まだ旅行がありません。「新しい旅行を作る」から始めてください。
+                </p>
+              ) : (
+                <select
+                  required
+                  value={selectedTripId}
+                  onChange={(e) => setSelectedTripId(e.target.value)}
+                >
+                  {trips.map((trip) => (
+                    <option key={trip.id} value={trip.id}>
+                      {trip.title}
+                    </option>
+                  ))}
+                </select>
+              )}
             </label>
-            <label className="record-form__photo-button">
-              <Camera size={16} strokeWidth={1.5} />
-              その場で撮影
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={addPhotos}
-                hidden
-              />
-            </label>
-          </div>
-        </div>
+            <SpotFields
+              value={existingSpot}
+              onChange={(patch) =>
+                setExistingSpot((prev) => ({ ...prev, ...patch }))
+              }
+            />
+          </>
+        )}
 
         {error && <p className="record-form__error">{error}</p>}
         <button
@@ -302,18 +257,4 @@ export function RecordFormScreen() {
       </form>
     </div>
   )
-}
-
-function usePhotoPreviews(files: File[]): string[] {
-  const [urls, setUrls] = useState<string[]>([])
-
-  useEffect(() => {
-    const nextUrls = files.map((file) => URL.createObjectURL(file))
-    setUrls(nextUrls)
-    return () => {
-      nextUrls.forEach((url) => URL.revokeObjectURL(url))
-    }
-  }, [files])
-
-  return urls
 }
