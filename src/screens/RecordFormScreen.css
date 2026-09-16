@@ -51,6 +51,32 @@
   opacity: 0.6;
 }
 
+.record-form__mode-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.record-form__mode-toggle button {
+  flex: 1;
+  padding: 8px 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.record-form__mode-toggle button.is-selected {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+  font-weight: 500;
+}
+
+.record-form__mode-toggle button:disabled {
+  opacity: 0.4;
+}
+
 .record-form__error {
   color: var(--color-danger);
   font-size: 13px;

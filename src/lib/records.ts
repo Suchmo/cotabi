@@ -7,9 +7,9 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { db } from './firebase'
-import { spotFromDoc } from './firestoreMappers'
+import { spotFromDoc, tripFromDoc } from './firestoreMappers'
 import { listPhotosBySpotId } from './photos'
-import type { Photo, Spot } from '../types/models'
+import type { Photo, Spot, Trip } from '../types/models'
 
 const tripsCollection = collection(db, 'trips')
 const spotsCollection = collection(db, 'spots')
@@ -54,6 +54,49 @@ export async function createTripAndSpot(input: CreateRecordInput) {
   })
 
   return { tripId: tripRef.id, spotId: spotRef.id }
+}
+
+export async function listTrips(): Promise<Trip[]> {
+  const snapshot = await getDocs(tripsCollection)
+  return snapshot.docs
+    .map(tripFromDoc)
+    .sort((a, b) => (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0))
+}
+
+export type AddSpotInput = {
+  tripId: string
+  countryCode: string
+  prefectureCode: string | null
+  spotName: string
+  visitedAt: string
+  diaryText: string
+  latitude: number | null
+  longitude: number | null
+  userId: string
+  userEmail: string | null
+}
+
+// 既存の旅行に、その旅行とは別の国・都道府県のスポットを追加できるようにする
+// (例: 「ヨーロッパ旅行」1件の中にイタリア・スイス・フランスのスポットを混在させる)。
+// TRIPドキュメントのcountryCode/prefectureCodeは最初のスポット作成時点のまま
+// 更新しない(訪問済み判定・地図のルート表示はいずれもSPOT側のcountryCode/
+// prefectureCodeだけを見る設計のため、複数国が混在しても影響しない)。
+export async function addSpotToTrip(input: AddSpotInput) {
+  const spotRef = await addDoc(spotsCollection, {
+    tripId: input.tripId,
+    name: input.spotName,
+    diaryText: input.diaryText,
+    visitedAt: input.visitedAt,
+    countryCode: input.countryCode,
+    prefectureCode: input.prefectureCode,
+    latitude: input.latitude,
+    longitude: input.longitude,
+    recordedBy: input.userId,
+    recordedByEmail: input.userEmail,
+    createdAt: serverTimestamp(),
+  })
+
+  return { spotId: spotRef.id }
 }
 
 export type SpotWithTripTitle = Spot & { tripTitle: string | null }

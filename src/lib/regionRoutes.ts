@@ -56,32 +56,37 @@ export async function getRegionRoutes(region: RegionKey): Promise<{
 
   const allSpots = spotsSnap.docs.map(spotFromDoc)
 
-  const spotsByTripId = new Map<string, LocatedSpot[]>()
+  // 1つの旅行に複数の国・都道府県のスポットが混在する場合があるため(例:
+  // 「ヨーロッパ旅行」にイタリア・スイス・フランスのスポットが混在)、
+  // 旅行(TRIP)単位ではなくスポット(SPOT)単位でこの地域に一致するかを判定する。
+  // 該当地域のスポットだけを日付順でつないだものを、その旅行のルートとする。
+  const matchingSpotsByTripId = new Map<string, LocatedSpot[]>()
   const pins: LocatedSpot[] = []
 
   for (const spot of allSpots) {
     if (!isLocated(spot)) continue
+    if (!matchesRegion(region, spot.countryCode, spot.prefectureCode)) continue
+
     if (spot.tripId) {
-      const list = spotsByTripId.get(spot.tripId)
+      const list = matchingSpotsByTripId.get(spot.tripId)
       if (list) list.push(spot)
-      else spotsByTripId.set(spot.tripId, [spot])
-    } else if (matchesRegion(region, spot.countryCode, spot.prefectureCode)) {
+      else matchingSpotsByTripId.set(spot.tripId, [spot])
+    } else {
       pins.push(spot)
     }
   }
 
   const routes: TripRoute[] = allTrips
-    .filter((trip) => matchesRegion(region, trip.countryCode, trip.prefectureCode))
+    .filter((trip) => matchingSpotsByTripId.has(trip.id))
     .map((trip) => ({
       tripId: trip.id,
       title: trip.title,
       color: colorByTripId.get(trip.id)!,
-      spots: (spotsByTripId.get(trip.id) ?? [])
+      spots: matchingSpotsByTripId
+        .get(trip.id)!
         .slice()
         .sort((a, b) => a.visitedAt.localeCompare(b.visitedAt)),
     }))
-    // 位置情報が入っているスポットが1件もない旅行は地図上に描画しようがないため除外
-    .filter((route) => route.spots.length > 0)
 
   return { routes, pins }
 }

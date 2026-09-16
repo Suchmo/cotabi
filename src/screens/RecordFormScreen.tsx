@@ -2,11 +2,14 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, ImagePlus, Camera, MapPin } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { createTripAndSpot } from '../lib/records'
+import { addSpotToTrip, createTripAndSpot, listTrips } from '../lib/records'
 import { uploadPhotosForSpot } from '../lib/photos'
 import { COUNTRIES } from '../lib/countries'
 import { JAPAN_COUNTRY_CODE, JAPAN_PREFECTURES } from '../lib/japanPrefectures'
+import type { Trip } from '../types/models'
 import './RecordFormScreen.css'
+
+type Mode = 'new-trip' | 'existing-trip'
 
 function todayAsDateInputValue() {
   return new Date().toISOString().slice(0, 10)
@@ -15,6 +18,10 @@ function todayAsDateInputValue() {
 export function RecordFormScreen() {
   const { user } = useAuth()
   const navigate = useNavigate()
+
+  const [mode, setMode] = useState<Mode>('new-trip')
+  const [trips, setTrips] = useState<Trip[] | null>(null)
+  const [selectedTripId, setSelectedTripId] = useState('')
 
   const [tripTitle, setTripTitle] = useState('')
   const [countryCode, setCountryCode] = useState(JAPAN_COUNTRY_CODE)
@@ -32,6 +39,13 @@ export function RecordFormScreen() {
   const [error, setError] = useState<string | null>(null)
 
   const isJapan = countryCode === JAPAN_COUNTRY_CODE
+
+  useEffect(() => {
+    listTrips().then((result) => {
+      setTrips(result)
+      if (result.length > 0) setSelectedTripId(result[0].id)
+    })
+  }, [])
 
   const captureLocation = () => {
     if (!navigator.geolocation) {
@@ -72,12 +86,12 @@ export function RecordFormScreen() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!user) return
+    if (mode === 'existing-trip' && !selectedTripId) return
 
     setSubmitting(true)
     setError(null)
     try {
-      const { spotId } = await createTripAndSpot({
-        tripTitle,
+      const spotInput = {
         countryCode,
         prefectureCode: isJapan && prefectureCode ? prefectureCode : null,
         spotName,
@@ -87,7 +101,13 @@ export function RecordFormScreen() {
         longitude: location?.lng ?? null,
         userId: user.uid,
         userEmail: user.email,
-      })
+      }
+
+      const { spotId } =
+        mode === 'new-trip'
+          ? await createTripAndSpot({ tripTitle, ...spotInput })
+          : await addSpotToTrip({ tripId: selectedTripId, ...spotInput })
+
       if (photos.length > 0) {
         await uploadPhotosForSpot(spotId, photos)
       }
@@ -99,18 +119,64 @@ export function RecordFormScreen() {
     }
   }
 
+  const hasExistingTrips = (trips?.length ?? 0) > 0
+
   return (
     <div className="record-form">
       <h1>記録を作成</h1>
       <form onSubmit={handleSubmit}>
-        <label>
-          旅行名
-          <input
-            required
-            value={tripTitle}
-            onChange={(e) => setTripTitle(e.target.value)}
-          />
-        </label>
+        <div className="record-form__mode-toggle">
+          <button
+            type="button"
+            className={mode === 'new-trip' ? 'is-selected' : ''}
+            onClick={() => setMode('new-trip')}
+          >
+            新しい旅行を作る
+          </button>
+          <button
+            type="button"
+            className={mode === 'existing-trip' ? 'is-selected' : ''}
+            onClick={() => setMode('existing-trip')}
+            disabled={!hasExistingTrips}
+          >
+            既存の旅行に追加
+          </button>
+        </div>
+
+        {mode === 'new-trip' ? (
+          <label>
+            旅行名
+            <input
+              required
+              value={tripTitle}
+              onChange={(e) => setTripTitle(e.target.value)}
+            />
+          </label>
+        ) : (
+          <label>
+            旅行を選択
+            {trips === null ? (
+              <p className="record-form__location-status">読み込み中…</p>
+            ) : trips.length === 0 ? (
+              <p className="record-form__location-status">
+                まだ旅行がありません。「新しい旅行を作る」から始めてください。
+              </p>
+            ) : (
+              <select
+                required
+                value={selectedTripId}
+                onChange={(e) => setSelectedTripId(e.target.value)}
+              >
+                {trips.map((trip) => (
+                  <option key={trip.id} value={trip.id}>
+                    {trip.title}
+                  </option>
+                ))}
+              </select>
+            )}
+          </label>
+        )}
+
         <label>
           国
           <select
@@ -225,7 +291,12 @@ export function RecordFormScreen() {
         </div>
 
         {error && <p className="record-form__error">{error}</p>}
-        <button type="submit" disabled={submitting}>
+        <button
+          type="submit"
+          disabled={
+            submitting || (mode === 'existing-trip' && !selectedTripId)
+          }
+        >
           {submitting ? '保存中…' : '保存する'}
         </button>
       </form>

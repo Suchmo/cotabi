@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getTripWithSpots, type SpotWithPhotos } from '../lib/records'
-import { formatLocationLabel } from '../lib/locationLabel'
+import { formatDistinctLocationsLabel } from '../lib/locationLabel'
 import { BackLink } from '../components/BackLink'
 import './TripDetailScreen.css'
 
@@ -52,7 +52,7 @@ export function TripDetailScreen() {
           <>
             <h1>{trip.title}</h1>
             <p className="trip-detail__meta">
-              {formatLocationLabel(trip.countryCode, trip.prefectureCode)} ・{' '}
+              {formatDistinctLocationsLabel(trip.spots)} ・{' '}
               {dateRangeLabel(trip.spots)}
             </p>
           </>
