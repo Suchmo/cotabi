@@ -57,3 +57,12 @@ export const JAPAN_PREFECTURES: Prefecture[] = [
 ]
 
 export const JAPAN_COUNTRY_CODE = 'JP'
+
+const codeByName = new Map(JAPAN_PREFECTURES.map((p) => [p.name, p.code]))
+
+// public/geo/japan-prefectures.geojson の properties.N03_001(都道府県名)から
+// JIS都道府県コードを引くためのヘルパー。地図の色分け判定に使用する。
+export function prefectureCodeForName(name: string | undefined): string | undefined {
+  if (!name) return undefined
+  return codeByName.get(name)
+}
