@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { RouteMap } from '../components/RouteMap'
+import { BackLink } from '../components/BackLink'
 import { useGeoJson } from '../hooks/useGeoJson'
 import {
   REGION_CENTER,
@@ -57,7 +58,7 @@ export function RegionDetailScreen() {
   return (
     <div className="region-detail">
       <div className="region-detail__header">
-        <Link to="/map">← マップに戻る</Link>
+        <BackLink to="/map" label="マップに戻る" />
         <h1>{regionTitle(kind, code)}</h1>
       </div>
       {routes && routes.length > 0 && (

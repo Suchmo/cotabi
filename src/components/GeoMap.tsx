@@ -2,18 +2,20 @@ import { useMemo, useRef } from 'react'
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet'
 import type { Layer, LatLngExpression, PathOptions } from 'leaflet'
 import { useGeoJson } from '../hooks/useGeoJson'
+import { MAP_COLORS } from '../lib/mapColors'
+import { DARK_TILE_URL, DARK_TILE_ATTRIBUTION } from '../lib/mapTiles'
 
 const VISITED_STYLE: PathOptions = {
-  fillColor: '#c4a45c',
+  fillColor: MAP_COLORS.accent,
   fillOpacity: 0.55,
-  color: '#a3823f',
+  color: MAP_COLORS.accentBorder,
   weight: 1,
 }
 
 const UNVISITED_STYLE: PathOptions = {
-  fillColor: '#d1d5db',
-  fillOpacity: 0.35,
-  color: '#9ca3af',
+  fillColor: MAP_COLORS.unvisited,
+  fillOpacity: 0.65,
+  color: MAP_COLORS.unvisitedBorder,
   weight: 1,
 }
 
@@ -69,8 +71,9 @@ export function GeoMap({
       style={{ height: '100%', width: '100%' }}
     >
       <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; OpenStreetMap contributors"
+        url={DARK_TILE_URL}
+        attribution={DARK_TILE_ATTRIBUTION}
+        detectRetina
       />
       {geojson && (
         <GeoJSON data={geojson} style={style} onEachFeature={onEachFeature} />

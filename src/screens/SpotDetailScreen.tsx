@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { getSpotDetail, type SpotDetail } from '../lib/records'
 import { formatLocationLabel } from '../lib/locationLabel'
+import { BackLink } from '../components/BackLink'
 import './SpotDetailScreen.css'
 
 function locationText(latitude: number | null, longitude: number | null) {
@@ -32,7 +33,7 @@ export function SpotDetailScreen() {
   return (
     <div className="spot-detail">
       <div className="spot-detail__header">
-        <Link to={backLink}>← 戻る</Link>
+        <BackLink to={backLink} label="戻る" />
         {notFound && <p>スポットが見つかりませんでした。</p>}
         {!notFound && !detail && <p>読み込み中…</p>}
         {detail && (

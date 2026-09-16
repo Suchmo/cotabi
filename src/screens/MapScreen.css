@@ -6,6 +6,7 @@
 
 .map-screen__region-toggle {
   display: flex;
+  align-items: center;
   gap: 8px;
   padding: 8px 12px;
   flex-shrink: 0;
@@ -14,28 +15,29 @@
 .map-screen__region-toggle button {
   flex: 1;
   padding: 8px 0;
-  border: 1px solid var(--tab-border, #d0d0d0);
-  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
   background: transparent;
-  font-size: 14px;
-  color: inherit;
+  font-size: 13px;
+  color: var(--color-text-secondary);
 }
 
 .map-screen__region-toggle button.is-selected {
-  background: #c4a45c;
-  border-color: #c4a45c;
-  color: #11141a;
-  font-weight: 600;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+  font-weight: 500;
 }
 
 .map-screen__list-link {
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  gap: 4px;
   padding: 0 12px;
   font-size: 13px;
-  color: inherit;
-  text-decoration: underline;
+  color: var(--color-text-secondary);
+  text-decoration: none;
 }
 
 .map-screen__map-area {
@@ -55,10 +57,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #c4a45c;
-  color: #11141a;
-  font-size: 24px;
-  line-height: 1;
+  background: var(--color-accent);
+  color: var(--color-accent-text);
   text-decoration: none;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }

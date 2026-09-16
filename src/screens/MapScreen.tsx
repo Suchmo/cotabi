@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Images, Plus } from 'lucide-react'
 import { GeoMap } from '../components/GeoMap'
 import { useVisitedLocations } from '../hooks/useVisitedLocations'
 import {
@@ -39,6 +40,7 @@ export function MapScreen() {
           </button>
         ))}
         <Link to="/records" className="map-screen__list-link">
+          <Images size={16} strokeWidth={1.5} />
           記録一覧
         </Link>
       </div>
@@ -52,7 +54,7 @@ export function MapScreen() {
           onFeatureClick={(id) => navigate(`/region/${region}/${id}`)}
         />
         <Link to="/records/new" className="map-screen__fab" aria-label="記録を作成">
-          +
+          <Plus size={24} strokeWidth={1.5} />
         </Link>
       </div>
     </div>

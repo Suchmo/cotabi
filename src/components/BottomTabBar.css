@@ -1,24 +1,25 @@
 .bottom-tab-bar {
   display: flex;
   flex-shrink: 0;
-  border-top: 1px solid var(--tab-border, #d0d0d0);
-  background: var(--tab-bg, #fff);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 .bottom-tab-bar a {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 10px 0;
-  font-size: 12px;
+  gap: 2px;
+  padding: 8px 0 6px;
+  font-size: 11px;
   text-decoration: none;
-  color: inherit;
-  opacity: 0.6;
+  color: var(--color-tab-inactive);
 }
 
 .bottom-tab-bar a.active {
-  opacity: 1;
-  font-weight: 600;
+  color: var(--color-accent);
+  font-weight: 500;
 }

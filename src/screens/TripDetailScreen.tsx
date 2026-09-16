@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getTripWithSpots, type SpotWithPhotos } from '../lib/records'
 import { formatLocationLabel } from '../lib/locationLabel'
+import { BackLink } from '../components/BackLink'
 import './TripDetailScreen.css'
 
 type TripDetail = {
@@ -44,7 +45,7 @@ export function TripDetailScreen() {
   return (
     <div className="trip-detail">
       <div className="trip-detail__header">
-        <Link to="/map">← マップに戻る</Link>
+        <BackLink to="/map" label="マップに戻る" />
         {notFound && <p>旅行が見つかりませんでした。</p>}
         {!notFound && !trip && <p>読み込み中…</p>}
         {trip && (

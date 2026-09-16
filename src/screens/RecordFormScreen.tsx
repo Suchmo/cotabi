@@ -1,5 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { X, ImagePlus, Camera, MapPin } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { createTripAndSpot } from '../lib/records'
 import { uploadPhotosForSpot } from '../lib/photos'
@@ -175,6 +176,7 @@ export function RecordFormScreen() {
               : '未取得(地図でのルート表示に使われます)'}
           </p>
           <button type="button" onClick={captureLocation} disabled={locating}>
+            <MapPin size={14} strokeWidth={1.5} />
             {locating ? '取得中…' : '現在地を取得'}
           </button>
           {locationError && (
@@ -190,7 +192,7 @@ export function RecordFormScreen() {
                 <div key={url} className="record-form__photo-thumb">
                   <img src={url} alt="" />
                   <button type="button" onClick={() => removePhoto(i)}>
-                    ×
+                    <X size={14} strokeWidth={2} />
                   </button>
                 </div>
               ))}
@@ -198,6 +200,7 @@ export function RecordFormScreen() {
           )}
           <div className="record-form__photo-buttons">
             <label className="record-form__photo-button">
+              <ImagePlus size={16} strokeWidth={1.5} />
               アルバムから選択
               <input
                 type="file"
@@ -208,6 +211,7 @@ export function RecordFormScreen() {
               />
             </label>
             <label className="record-form__photo-button">
+              <Camera size={16} strokeWidth={1.5} />
               その場で撮影
               <input
                 type="file"

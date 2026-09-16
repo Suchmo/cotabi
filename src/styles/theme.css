@@ -1,0 +1,32 @@
+/*
+ * COTABI デザインシステム(docs/design_system.md)のカラートークン。
+ * 色の値はこのファイルにまとめて定義し、他のCSSからは var(--color-*) 等の
+ * カスタムプロパティ経由でのみ参照する(直接の16進値の書き込みは避ける)。
+ */
+:root {
+  /* 背景 */
+  --color-bg: #11141a;
+  --color-bg-card: #171b23;
+  --color-bg-subtle: #1b2029;
+  --color-placeholder: #2a3038;
+
+  /* ボーダー・区切り線 */
+  --color-border: #232833;
+
+  /* テキスト */
+  --color-text: #f3f0e8;
+  --color-text-secondary: #7a8290;
+  --color-text-tertiary: #4b515c;
+  --color-tab-inactive: #5c6270;
+
+  /* アクセント(ゴールド)。選択状態・ボタン・訪問済みマップの色分けにのみ使う */
+  --color-accent: #c4a45c;
+  --color-accent-text: #241d0f;
+
+  /* デザインシステムにはない、フォームのエラー表示用の意味色(必要最小限の例外) */
+  --color-danger: #f87171;
+
+  /* 角丸 */
+  --radius-card: 12px;
+  --radius-pill: 999px;
+}

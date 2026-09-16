@@ -12,6 +12,8 @@ import {
 import L from 'leaflet'
 import type { LatLngExpression } from 'leaflet'
 import type { LocatedSpot, TripRoute } from '../lib/regionRoutes'
+import { MAP_COLORS } from '../lib/mapColors'
+import { DARK_TILE_URL, DARK_TILE_ATTRIBUTION } from '../lib/mapTiles'
 
 type RouteMapProps = {
   center: LatLngExpression
@@ -51,13 +53,14 @@ export function RouteMap({
       style={{ height: '100%', width: '100%' }}
     >
       <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; OpenStreetMap contributors"
+        url={DARK_TILE_URL}
+        attribution={DARK_TILE_ATTRIBUTION}
+        detectRetina
       />
       {boundaryFeature && (
         <GeoJSON
           data={boundaryFeature}
-          style={{ color: '#9ca3af', weight: 1, fillOpacity: 0.05 }}
+          style={{ color: MAP_COLORS.boundaryOutline, weight: 1, fillOpacity: 0.05 }}
           interactive={false}
         />
       )}

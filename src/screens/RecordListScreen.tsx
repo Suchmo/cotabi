@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Plus } from 'lucide-react'
 import { listSpotsWithTrips, type SpotWithTripTitle } from '../lib/records'
 import { listPhotosBySpotId } from '../lib/photos'
 import { formatLocationLabel } from '../lib/locationLabel'
@@ -30,7 +31,10 @@ export function RecordListScreen() {
     <div className="record-list">
       <h1>記録一覧(仮)</h1>
       <p>
-        <Link to="/records/new">+ 新しい記録を作成</Link>
+        <Link to="/records/new" className="record-list__new-link">
+          <Plus size={16} strokeWidth={1.5} />
+          新しい記録を作成
+        </Link>
       </p>
       {error && <p>{error}</p>}
       {!error && spots === null && <p>読み込み中…</p>}
