@@ -26,6 +26,7 @@
 
 .trip-detail__view-toggle button {
   flex: 1;
+  min-height: 44px;
   padding: 8px 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);

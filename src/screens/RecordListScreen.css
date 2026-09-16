@@ -8,6 +8,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  min-height: 44px;
   font-size: 13px;
   color: var(--color-accent);
   text-decoration: none;
@@ -18,12 +19,14 @@
 }
 
 .record-list__group-heading {
-  display: block;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 14px;
   font-weight: 500;
   color: var(--color-accent);
   text-decoration: none;
-  margin: 0 0 8px;
+  margin: 0 0 4px;
 }
 
 .record-list__group-heading--plain {

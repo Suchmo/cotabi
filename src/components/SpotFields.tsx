@@ -1,7 +1,18 @@
 import { useEffect, useState, type ChangeEvent } from 'react'
 import { X, ImagePlus, Camera, MapPin } from 'lucide-react'
+import { Combobox, type ComboboxOption } from './Combobox'
 import { COUNTRIES } from '../lib/countries'
 import { JAPAN_COUNTRY_CODE, JAPAN_PREFECTURES } from '../lib/japanPrefectures'
+
+const COUNTRY_OPTIONS: ComboboxOption[] = COUNTRIES.map((c) => ({
+  value: c.code,
+  label: c.name,
+}))
+
+const PREFECTURE_OPTIONS: ComboboxOption[] = [
+  { value: '', label: '(未選択)' },
+  ...JAPAN_PREFECTURES.map((p) => ({ value: p.code, label: p.name })),
+]
 
 export type SpotFieldsValue = {
   countryCode: string
@@ -79,33 +90,23 @@ export function SpotFields({ value, onChange }: SpotFieldsProps) {
     <>
       <label>
         国
-        <select
+        <Combobox
           value={value.countryCode}
-          onChange={(e) =>
-            onChange({ countryCode: e.target.value, prefectureCode: '' })
-          }
-        >
-          {COUNTRIES.map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+          onChange={(code) => onChange({ countryCode: code, prefectureCode: '' })}
+          options={COUNTRY_OPTIONS}
+          placeholder="国名で検索"
+          required
+        />
       </label>
       {isJapan && (
         <label>
           都道府県
-          <select
+          <Combobox
             value={value.prefectureCode}
-            onChange={(e) => onChange({ prefectureCode: e.target.value })}
-          >
-            <option value="">(未選択)</option>
-            {JAPAN_PREFECTURES.map((p) => (
-              <option key={p.code} value={p.code}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+            onChange={(code) => onChange({ prefectureCode: code })}
+            options={PREFECTURE_OPTIONS}
+            placeholder="都道府県名で検索"
+          />
         </label>
       )}
       <label>

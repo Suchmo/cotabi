@@ -79,6 +79,7 @@ export function RegionDetailScreen() {
           ))}
         </div>
       )}
+      {routes === null && <p className="region-detail__empty">読み込み中…</p>}
       {routes && routes.length === 0 && pins.length === 0 && (
         <p className="region-detail__empty">
           この地域にはまだ位置情報付きの記録がありません。
