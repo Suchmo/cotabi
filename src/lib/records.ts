@@ -78,13 +78,16 @@ export async function listSpotsWithTrips(): Promise<SpotWithTripTitle[]> {
   })
 }
 
-export type SpotWithThumbnail = Spot & { thumbnailUrl: string | null }
+export type SpotWithPhotos = Spot & {
+  photos: Photo[]
+  thumbnailUrl: string | null
+}
 
 export async function getTripWithSpots(tripId: string): Promise<{
   title: string
   countryCode: string
   prefectureCode: string | null
-  spots: SpotWithThumbnail[]
+  spots: SpotWithPhotos[]
 } | null> {
   const [tripsSnap, spotsSnap, photosBySpotId] = await Promise.all([
     getDocs(tripsCollection),
@@ -100,10 +103,14 @@ export async function getTripWithSpots(tripId: string): Promise<{
     .map(spotFromDoc)
     .filter((spot) => spot.tripId === tripId)
     .sort((a, b) => a.visitedAt.localeCompare(b.visitedAt))
-    .map((spot) => ({
-      ...spot,
-      thumbnailUrl: photosBySpotId.get(spot.id)?.[0]?.downloadUrl ?? null,
-    }))
+    .map((spot) => {
+      const photos = photosBySpotId.get(spot.id) ?? []
+      return {
+        ...spot,
+        photos,
+        thumbnailUrl: photos[0]?.downloadUrl ?? null,
+      }
+    })
 
   return {
     title: tripData.title as string,

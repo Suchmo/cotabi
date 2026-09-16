@@ -23,6 +23,29 @@
   margin: 0;
 }
 
+.trip-detail__view-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.trip-detail__view-toggle button {
+  flex: 1;
+  padding: 8px 0;
+  border: 1px solid var(--tab-border, #d0d0d0);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 14px;
+  color: inherit;
+}
+
+.trip-detail__view-toggle button.is-selected {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+  font-weight: 600;
+}
+
 .trip-detail__timeline {
   display: flex;
   flex-direction: column;
@@ -62,4 +85,18 @@
   align-self: center;
   font-size: 15px;
   font-weight: 600;
+}
+
+.trip-detail__album-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.trip-detail__album-item img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
 }
