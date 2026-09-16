@@ -1,0 +1,29 @@
+.stats-screen {
+  padding: 16px;
+}
+
+.stats-screen__cards {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.stats-screen__card {
+  flex: 1;
+  border: 1px solid var(--tab-border, #d0d0d0);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stats-screen__card-value {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stats-screen__card-label {
+  font-size: 13px;
+  opacity: 0.7;
+  margin-top: 4px;
+}
