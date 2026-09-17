@@ -4,16 +4,19 @@ import { MapScreen } from './screens/MapScreen'
 import { StatsScreen } from './screens/StatsScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { LoginScreen } from './screens/LoginScreen'
+import { LockScreen } from './screens/LockScreen'
 import { RecordFormScreen } from './screens/RecordFormScreen'
 import { RecordListScreen } from './screens/RecordListScreen'
 import { RegionDetailScreen } from './screens/RegionDetailScreen'
 import { TripDetailScreen } from './screens/TripDetailScreen'
 import { SpotDetailScreen } from './screens/SpotDetailScreen'
 import { useAuth } from './hooks/useAuth'
+import { useLock } from './hooks/useLock'
 import './App.css'
 
 function App() {
   const { user, loading } = useAuth()
+  const { settingsLoaded, settings, locked } = useLock()
 
   if (loading) {
     return <div className="app-loading">読み込み中…</div>
@@ -21,6 +24,13 @@ function App() {
 
   if (!user) {
     return <LoginScreen />
+  }
+
+  // プライバシーロック(Phase2)は、Firebase Authenticationのログイン状態とは
+  // 別の「同じ端末をのぞき見されない」ための仕組み。ログイン済みでも、
+  // ロックが有効かつ未解除の間はコンテンツを一切表示しない。
+  if (settingsLoaded && settings?.lockEnabled && locked) {
+    return <LockScreen />
   }
 
   return (

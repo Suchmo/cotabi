@@ -20,3 +20,116 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
 }
+
+.settings-screen button:disabled {
+  opacity: 0.6;
+}
+
+.settings-screen__section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.settings-screen__section h2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 15px;
+  color: var(--color-text);
+}
+
+.settings-screen__description {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.settings-screen__error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-danger);
+}
+
+.settings-screen__lock-toggle {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  background: var(--color-bg-subtle);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+}
+
+.settings-screen__lock-toggle button {
+  flex: 1;
+  min-height: 40px;
+  padding: 8px 4px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.settings-screen__lock-toggle button.is-selected {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  font-weight: 500;
+}
+
+.settings-screen__pin-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-screen__pin-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.settings-screen__pin-form input {
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  font-size: 18px;
+  letter-spacing: 6px;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.settings-screen__pin-form-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-screen__pin-form-buttons button {
+  flex: 1;
+  justify-content: center;
+}
+
+.settings-screen__pin-form-buttons button[type='submit'] {
+  color: var(--color-accent-text);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  font-weight: 500;
+}
+
+.settings-screen__webauthn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
