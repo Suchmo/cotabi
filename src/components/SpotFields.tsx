@@ -4,6 +4,7 @@ import { Combobox, type ComboboxOption } from './Combobox'
 import { searchPlaces, type PlaceResult } from '../lib/nominatim'
 import { COUNTRIES } from '../lib/countries'
 import { JAPAN_COUNTRY_CODE, JAPAN_PREFECTURES } from '../lib/japanPrefectures'
+import { PRESET_TAGS } from '../lib/tags'
 
 const COUNTRY_OPTIONS: ComboboxOption[] = COUNTRIES.map((c) => ({
   value: c.code,
@@ -25,6 +26,7 @@ export type SpotFieldsValue = {
   diaryText: string
   photos: File[]
   location: { lat: number; lng: number } | null
+  tags: string[]
 }
 
 export function createEmptySpotFieldsValue(visitedAt: string): SpotFieldsValue {
@@ -36,6 +38,7 @@ export function createEmptySpotFieldsValue(visitedAt: string): SpotFieldsValue {
     diaryText: '',
     photos: [],
     location: null,
+    tags: [],
   }
 }
 
@@ -56,6 +59,8 @@ export function SpotFields({ value, onChange }: SpotFieldsProps) {
   const [placeResults, setPlaceResults] = useState<PlaceResult[]>([])
   const [placeSearching, setPlaceSearching] = useState(false)
   const [placeError, setPlaceError] = useState<string | null>(null)
+
+  const [customTag, setCustomTag] = useState('')
 
   const isJapan = value.countryCode === JAPAN_COUNTRY_CODE
 
@@ -127,6 +132,23 @@ export function SpotFields({ value, onChange }: SpotFieldsProps) {
     setPlaceResults([])
   }
 
+  const toggleTag = (tag: string) => {
+    onChange({
+      tags: value.tags.includes(tag)
+        ? value.tags.filter((t) => t !== tag)
+        : [...value.tags, tag],
+    })
+  }
+
+  const addCustomTag = () => {
+    const trimmed = customTag.trim()
+    setCustomTag('')
+    if (!trimmed || value.tags.includes(trimmed)) return
+    onChange({ tags: [...value.tags, trimmed] })
+  }
+
+  const customTags = value.tags.filter((tag) => !PRESET_TAGS.includes(tag))
+
   const addPhotos = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || files.length === 0) return
@@ -185,6 +207,54 @@ export function SpotFields({ value, onChange }: SpotFieldsProps) {
           onChange={(e) => onChange({ diaryText: e.target.value })}
         />
       </label>
+
+      <div className="record-form__tags">
+        <span className="record-form__photos-label">タグ(任意)</span>
+        <div className="record-form__tag-options">
+          {PRESET_TAGS.map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              className={value.tags.includes(tag) ? 'is-selected' : ''}
+              onClick={() => toggleTag(tag)}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+        {customTags.length > 0 && (
+          <div className="record-form__tag-options">
+            {customTags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                className="is-selected"
+                onClick={() => toggleTag(tag)}
+              >
+                {tag}
+                <X size={12} strokeWidth={2} />
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="record-form__tag-input">
+          <input
+            type="text"
+            placeholder="タグを追加(例: 記念日)"
+            value={customTag}
+            onChange={(e) => setCustomTag(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addCustomTag()
+              }
+            }}
+          />
+          <button type="button" onClick={addCustomTag}>
+            追加
+          </button>
+        </div>
+      </div>
 
       <div className="record-form__location">
         <span className="record-form__photos-label">位置情報(任意)</span>

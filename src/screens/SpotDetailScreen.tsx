@@ -56,6 +56,15 @@ export function SpotDetailScreen() {
               位置情報:{' '}
               {locationText(detail.spot.latitude, detail.spot.longitude)}
             </p>
+            {detail.spot.tags.length > 0 && (
+              <div className="spot-detail__tags">
+                {detail.spot.tags.map((tag) => (
+                  <span key={tag} className="spot-detail__tag">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>

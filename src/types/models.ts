@@ -27,6 +27,9 @@ export type Spot = {
   prefectureCode: string | null
   latitude: number | null
   longitude: number | null
+  // タグ・カテゴリ付け(Phase2)。プリセット(src/lib/tags.ts)または
+  // 自由入力の文字列をそのまま保持する。検索・絞り込み(Phase3)は対象外。
+  tags: string[]
   recordedBy: string
   recordedByEmail: string | null
   createdAt: Timestamp | null

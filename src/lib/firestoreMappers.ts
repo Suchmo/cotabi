@@ -28,6 +28,7 @@ export function spotFromDoc(doc: QueryDocumentSnapshot): Spot {
     prefectureCode: data.prefectureCode ?? null,
     latitude: data.latitude ?? null,
     longitude: data.longitude ?? null,
+    tags: (data.tags as string[] | undefined) ?? [],
     recordedBy: data.recordedBy,
     recordedByEmail: data.recordedByEmail ?? null,
     createdAt: data.createdAt ?? null,

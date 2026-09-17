@@ -147,6 +147,15 @@ function SpotCard({
         {locationLabel(spot)} ・ {spot.visitedAt} ・{' '}
         {spot.recordedByEmail ?? spot.recordedBy}
       </p>
+      {spot.tags.length > 0 && (
+        <div className="record-list__tags">
+          {spot.tags.map((tag) => (
+            <span key={tag} className="record-list__tag">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
       {photos.length > 0 && (
         <div className="record-list__photo-grid">
           {photos.map((photo) => (

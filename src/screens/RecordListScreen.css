@@ -53,6 +53,21 @@
   margin: 0 0 8px;
 }
 
+.record-list__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.record-list__tag {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-subtle);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
 .record-list__photo-grid {
   display: flex;
   flex-wrap: wrap;

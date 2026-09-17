@@ -77,10 +77,31 @@
   background: var(--color-placeholder);
 }
 
+.trip-detail__timeline-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+
 .trip-detail__timeline-name {
-  align-self: center;
   font-size: 14px;
   font-weight: 500;
+}
+
+.trip-detail__timeline-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.trip-detail__timeline-tag {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-subtle);
+  font-size: 10px;
+  color: var(--color-text-secondary);
 }
 
 .trip-detail__album-grid {

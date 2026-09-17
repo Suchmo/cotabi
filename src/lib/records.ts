@@ -24,6 +24,7 @@ export type SpotInput = {
   diaryText: string
   latitude: number | null
   longitude: number | null
+  tags: string[]
 }
 
 export type CreateTripInput = {
@@ -73,6 +74,7 @@ export async function createTripWithSpots(input: CreateTripInput): Promise<{
       prefectureCode: spot.prefectureCode,
       latitude: spot.latitude,
       longitude: spot.longitude,
+      tags: spot.tags,
       recordedBy: input.userId,
       recordedByEmail: input.userEmail,
       createdAt: serverTimestamp(),
@@ -101,6 +103,7 @@ export type AddSpotInput = {
   diaryText: string
   latitude: number | null
   longitude: number | null
+  tags: string[]
   userId: string
   userEmail: string | null
 }
@@ -120,6 +123,7 @@ export async function addSpotToTrip(input: AddSpotInput) {
     prefectureCode: input.prefectureCode,
     latitude: input.latitude,
     longitude: input.longitude,
+    tags: input.tags,
     recordedBy: input.userId,
     recordedByEmail: input.userEmail,
     createdAt: serverTimestamp(),

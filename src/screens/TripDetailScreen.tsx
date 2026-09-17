@@ -102,8 +102,19 @@ export function TripDetailScreen() {
                   ) : (
                     <span className="trip-detail__timeline-thumb" />
                   )}
-                  <span className="trip-detail__timeline-name">
-                    {spot.name}
+                  <span className="trip-detail__timeline-body">
+                    <span className="trip-detail__timeline-name">
+                      {spot.name}
+                    </span>
+                    {spot.tags.length > 0 && (
+                      <span className="trip-detail__timeline-tags">
+                        {spot.tags.map((tag) => (
+                          <span key={tag} className="trip-detail__timeline-tag">
+                            {tag}
+                          </span>
+                        ))}
+                      </span>
+                    )}
                   </span>
                 </Link>
               ))}

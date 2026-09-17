@@ -191,6 +191,60 @@
   opacity: 0.6;
 }
 
+.record-form__tags {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* タグは画面幅に応じて折り返す小さなチップの集合であり、個数も可変なため、
+   スポット削除ボタン(36px)と同様に44pxの目安は適用せず、視認・誤タップ
+   しにくい範囲でコンパクトに保つ。 */
+.record-form__tag-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.record-form__tag-options button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.record-form__tag-options button.is-selected {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+  font-weight: 500;
+}
+
+.record-form__tag-input {
+  display: flex;
+  gap: 8px;
+}
+
+.record-form__tag-input input {
+  flex: 1;
+}
+
+.record-form__tag-input button {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
 .record-form__place-search {
   display: flex;
   flex-direction: column;

@@ -32,6 +32,7 @@ function toSpotInput(block: SpotFieldsValue) {
     diaryText: block.diaryText,
     latitude: block.location?.lat ?? null,
     longitude: block.location?.lng ?? null,
+    tags: block.tags,
   }
 }
 
