@@ -1,10 +1,11 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { useBeforeUnload, useBlocker, useNavigate } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { addSpotToTrip, createTripWithSpots, listTrips } from '../lib/records'
 import { uploadPhotosForSpot } from '../lib/photos'
+import { isFullySynced } from '../lib/syncStatus'
 import {
   SpotFields,
   createEmptySpotFieldsValue,
@@ -17,6 +18,11 @@ import './RecordFormScreen.css'
 type Mode = 'new-trip' | 'existing-trip'
 
 type SpotBlock = SpotFieldsValue & { id: string }
+
+const UNSAVED_CHANGES_MESSAGE = '入力内容が失われますが移動しますか?'
+// 長めの案内文はデフォルトの2.5秒では読み切れないことがあるため、
+// 一定の長さを超えるメッセージは表示時間を延ばす。
+const LONG_TOAST_MS = 4500
 
 function todayAsDateInputValue() {
   return new Date().toISOString().slice(0, 10)
@@ -34,6 +40,27 @@ function toSpotInput(block: SpotFieldsValue) {
     longitude: block.location?.lng ?? null,
     tags: block.tags,
   }
+}
+
+function isSpotDirty(spot: SpotFieldsValue): boolean {
+  return (
+    spot.spotName.trim() !== '' ||
+    spot.diaryText.trim() !== '' ||
+    spot.photos.length > 0 ||
+    spot.tags.length > 0 ||
+    spot.location !== null
+  )
+}
+
+function buildSaveMessage(hasPhotoFailure: boolean, synced: boolean): string {
+  if (hasPhotoFailure) {
+    return synced
+      ? '記録は保存されましたが、一部の写真が保存できませんでした。'
+      : '記録は保存されましたが、一部の写真が保存できませんでした(同期待ちの内容もあります。電波の良い場所で自動的に送信されます)。'
+  }
+  return synced
+    ? '保存しました'
+    : '保存しました(同期待ち・電波の良い場所で自動的に送信されます)'
 }
 
 export function RecordFormScreen() {
@@ -67,6 +94,49 @@ export function RecordFormScreen() {
     })
   }, [])
 
+  const isDirty =
+    mode === 'new-trip'
+      ? tripTitle.trim() !== '' ||
+        startDate !== '' ||
+        endDate !== '' ||
+        costYen.trim() !== '' ||
+        spotBlocks.some(isSpotDirty)
+      : isSpotDirty(existingSpot)
+
+  // 保存に成功した直後は離脱確認をスキップする(navigate('/records')自体が
+  // ブロックされてしまうのを防ぐ)ため、レンダーのタイミングに依存しない
+  // refで管理する。isDirtyもrefに同期し、ブロック判定関数からは常に最新の
+  // 値を読む(useCallbackの依存配列を空にして関数の参照自体は固定するため)。
+  const isDirtyRef = useRef(isDirty)
+  isDirtyRef.current = isDirty
+  const justSavedRef = useRef(false)
+
+  const shouldBlockNavigation = useCallback(
+    () => isDirtyRef.current && !justSavedRef.current,
+    [],
+  )
+  const blocker = useBlocker(shouldBlockNavigation)
+
+  useEffect(() => {
+    if (blocker.state !== 'blocked') return
+    if (window.confirm(UNSAVED_CHANGES_MESSAGE)) {
+      window.setTimeout(blocker.proceed, 0)
+    } else {
+      blocker.reset()
+    }
+  }, [blocker])
+
+  // 下タブのクリック・ブラウザ/PWAの戻る操作は上のuseBlockerでカバーされるが、
+  // タブを閉じる・再読み込みする操作はアプリ内ルーティングを経由しないため、
+  // 別途beforeunloadでも警告する。
+  useBeforeUnload(
+    useCallback((e: BeforeUnloadEvent) => {
+      if (isDirtyRef.current && !justSavedRef.current) {
+        e.preventDefault()
+      }
+    }, []),
+  )
+
   const updateSpotBlock = (id: string, patch: Partial<SpotFieldsValue>) => {
     setSpotBlocks((prev) =>
       prev.map((block) => (block.id === id ? { ...block, ...patch } : block)),
@@ -99,6 +169,8 @@ export function RecordFormScreen() {
     setSubmitting(true)
     setError(null)
     try {
+      let hasPhotoFailure = false
+
       if (mode === 'new-trip') {
         const { spotIds } = await createTripWithSpots({
           tripTitle,
@@ -110,13 +182,17 @@ export function RecordFormScreen() {
           userEmail: user.email,
         })
 
-        await Promise.all(
+        // 旅行・スポット自体の保存(上のawait)が成功した後は、写真の
+        // アップロードが一部失敗しても「保存に失敗しました」と一律に
+        // 表示せず、部分的な成功として区別して伝える。
+        const photoResults = await Promise.allSettled(
           spotBlocks.map((block, i) =>
             block.photos.length > 0
               ? uploadPhotosForSpot(spotIds[i], block.photos)
               : Promise.resolve(),
           ),
         )
+        hasPhotoFailure = photoResults.some((r) => r.status === 'rejected')
       } else {
         const { spotId } = await addSpotToTrip({
           tripId: selectedTripId,
@@ -125,10 +201,28 @@ export function RecordFormScreen() {
           userEmail: user.email,
         })
         if (existingSpot.photos.length > 0) {
-          await uploadPhotosForSpot(spotId, existingSpot.photos)
+          hasPhotoFailure = await uploadPhotosForSpot(spotId, existingSpot.photos).then(
+            () => false,
+            () => true,
+          )
         }
       }
-      showToast('保存しました')
+
+      // Firestoreはオフラインでもローカルキャッシュへの書き込みを即座に
+      // 成功扱いにするため、waitForPendingWrites()で実際にサーバーへ
+      // 届いたかどうかを確認する(電波が悪い間は一定時間で諦めて
+      // 「未同期」として案内する。isFullySynced自体が失敗した場合も、
+      // 保存自体は成功しているので安全側の「未同期」扱いにとどめる)。
+      let synced = true
+      try {
+        synced = await isFullySynced()
+      } catch {
+        synced = false
+      }
+
+      justSavedRef.current = true
+      const message = buildSaveMessage(hasPhotoFailure, synced)
+      showToast(message, message.length > 20 ? LONG_TOAST_MS : undefined)
       navigate('/records')
     } catch {
       setError('保存に失敗しました。時間をおいて再度お試しください。')
