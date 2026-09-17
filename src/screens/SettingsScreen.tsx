@@ -44,9 +44,13 @@ export function SettingsScreen() {
       setShowPinForm(true)
       return
     }
-    await updateUserLockSettings(user.uid, { lockEnabled: enabled })
-    await refreshSettings()
-    showToast(enabled ? 'ロックを有効にしました' : 'ロックを無効にしました')
+    try {
+      await updateUserLockSettings(user.uid, { lockEnabled: enabled })
+      await refreshSettings()
+      showToast(enabled ? 'ロックを有効にしました' : 'ロックを無効にしました')
+    } catch {
+      showToast('設定の変更に失敗しました。時間をおいて再度お試しください。')
+    }
   }
 
   const handleSavePin = async (e: FormEvent) => {
@@ -60,16 +64,20 @@ export function SettingsScreen() {
       setPinError('確認用のPINが一致しません。')
       return
     }
-    const salt = generateSalt()
-    const pinHash = await hashPin(pin, salt)
-    await updateUserLockSettings(user.uid, {
-      pinHash,
-      pinSalt: salt,
-      lockEnabled: true,
-    })
-    await refreshSettings()
-    resetPinForm()
-    showToast('PINコードを設定しました')
+    try {
+      const salt = generateSalt()
+      const pinHash = await hashPin(pin, salt)
+      await updateUserLockSettings(user.uid, {
+        pinHash,
+        pinSalt: salt,
+        lockEnabled: true,
+      })
+      await refreshSettings()
+      resetPinForm()
+      showToast('PINコードを設定しました')
+    } catch {
+      setPinError('保存に失敗しました。時間をおいて再度お試しください。')
+    }
   }
 
   const handleRegisterWebAuthn = async () => {
@@ -90,9 +98,13 @@ export function SettingsScreen() {
 
   const handleRemoveWebAuthn = async () => {
     if (!user) return
-    await updateUserLockSettings(user.uid, { webauthnCredentialId: null })
-    await refreshSettings()
-    showToast('生体認証の設定を解除しました')
+    try {
+      await updateUserLockSettings(user.uid, { webauthnCredentialId: null })
+      await refreshSettings()
+      showToast('生体認証の設定を解除しました')
+    } catch {
+      showToast('生体認証の解除に失敗しました。時間をおいて再度お試しください。')
+    }
   }
 
   return (

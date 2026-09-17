@@ -16,7 +16,12 @@ export function FlashbackCards() {
       {items.map(({ spot, yearsAgo, tripTitle, thumbnailUrl }) => (
         <Link key={spot.id} to={`/spots/${spot.id}`} className="flashback-cards__card">
           {thumbnailUrl ? (
-            <img src={thumbnailUrl} alt="" className="flashback-cards__thumb" />
+            <img
+              src={thumbnailUrl}
+              alt=""
+              loading="lazy"
+              className="flashback-cards__thumb"
+            />
           ) : (
             <div className="flashback-cards__thumb flashback-cards__thumb--placeholder" />
           )}

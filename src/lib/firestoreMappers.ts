@@ -1,5 +1,5 @@
 import type { QueryDocumentSnapshot } from 'firebase/firestore'
-import type { Spot, Trip, Wish } from '../types/models'
+import type { Photo, Spot, Trip, Wish } from '../types/models'
 
 export function tripFromDoc(doc: QueryDocumentSnapshot): Trip {
   const data = doc.data()
@@ -33,6 +33,21 @@ export function spotFromDoc(doc: QueryDocumentSnapshot): Spot {
     recordedBy: data.recordedBy,
     recordedByEmail: data.recordedByEmail ?? null,
     createdAt: data.createdAt ?? null,
+  }
+}
+
+export function photoFromDoc(doc: QueryDocumentSnapshot): Photo {
+  const data = doc.data()
+  return {
+    id: doc.id,
+    spotId: data.spotId,
+    storagePath: data.storagePath,
+    downloadUrl: data.downloadUrl,
+    // サムネイル生成前にアップロードされた旧データにはこれらのフィールドが
+    // 無いため、フルサイズ画像へフォールバックする。
+    thumbnailStoragePath: data.thumbnailStoragePath ?? data.storagePath,
+    thumbnailUrl: data.thumbnailUrl ?? data.downloadUrl,
+    uploadedAt: data.uploadedAt ?? null,
   }
 }
 

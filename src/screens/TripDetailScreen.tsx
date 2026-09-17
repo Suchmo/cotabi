@@ -75,6 +75,8 @@ export function TripDetailScreen() {
       setTrip((prev) => (prev ? { ...prev, costYen } : prev))
       setEditingCost(false)
       showToast('費用を保存しました')
+    } catch {
+      showToast('費用の保存に失敗しました。時間をおいて再度お試しください。')
     } finally {
       setSavingCost(false)
     }
@@ -195,6 +197,7 @@ export function TripDetailScreen() {
                     <img
                       src={spot.thumbnailUrl}
                       alt=""
+                      loading="lazy"
                       className="trip-detail__timeline-thumb"
                     />
                   ) : (
@@ -231,7 +234,7 @@ export function TripDetailScreen() {
                       to={`/spots/${spot.id}`}
                       className="trip-detail__album-item"
                     >
-                      <img src={photo.downloadUrl} alt="" />
+                      <img src={photo.thumbnailUrl} alt="" loading="lazy" />
                     </Link>
                   )),
                 )}

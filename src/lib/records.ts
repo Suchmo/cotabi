@@ -197,7 +197,7 @@ export async function getTripWithSpots(tripId: string): Promise<{
       return {
         ...spot,
         photos,
-        thumbnailUrl: photos[0]?.downloadUrl ?? null,
+        thumbnailUrl: photos[0]?.thumbnailUrl ?? null,
       }
     })
 
@@ -251,7 +251,7 @@ export async function listFlashbackSpots(): Promise<FlashbackSpot[]> {
       spot,
       yearsAgo,
       tripTitle: spot.tripId ? (tripTitleById.get(spot.tripId) ?? null) : null,
-      thumbnailUrl: photos[0]?.downloadUrl ?? null,
+      thumbnailUrl: photos[0]?.thumbnailUrl ?? null,
     })
   })
 

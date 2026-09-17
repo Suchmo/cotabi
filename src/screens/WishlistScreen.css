@@ -93,6 +93,23 @@
   color: var(--color-text-secondary);
 }
 
+.wishlist-screen__load-error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wishlist-screen__load-error button {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
 .wishlist-screen__error {
   margin: 0;
   font-size: 13px;

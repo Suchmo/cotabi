@@ -31,7 +31,7 @@ export function RegionDetailScreen() {
   const kind: RegionKind = params.kind === 'japan' ? 'japan' : 'world'
   const code = params.code ?? ''
 
-  const geojson = useGeoJson(REGION_GEOJSON_URL[kind])
+  const { data: geojson } = useGeoJson(REGION_GEOJSON_URL[kind])
   const boundaryFeature = useMemo(() => {
     if (!geojson) return null
     return (

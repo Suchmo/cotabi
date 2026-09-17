@@ -9,6 +9,7 @@ import type {
 import { useGeoJson } from '../hooks/useGeoJson'
 import { MAP_COLORS } from '../lib/mapColors'
 import { LIGHT_TILE_URL, LIGHT_TILE_ATTRIBUTION } from '../lib/mapTiles'
+import './GeoMap.css'
 
 const VISITED_STYLE: PathOptions = {
   fillColor: MAP_COLORS.accent,
@@ -53,7 +54,7 @@ export function GeoMap({
   filterKey,
   featureFilter,
 }: GeoMapProps) {
-  const geojson = useGeoJson(geojsonUrl)
+  const { data: geojson, loading, error, retry } = useGeoJson(geojsonUrl)
 
   const style = useMemo(() => {
     return (feature?: GeoJSON.Feature): PathOptions => {
@@ -81,30 +82,48 @@ export function GeoMap({
   }, [])
 
   return (
-    <MapContainer
-      key={`${geojsonUrl}:${filterKey ?? ''}`}
-      center={center}
-      zoom={zoom}
-      minZoom={minZoom}
-      maxZoom={maxZoom}
-      maxBounds={maxBounds}
-      maxBoundsViscosity={1.0}
-      zoomControl={false}
-      style={{ height: '100%', width: '100%' }}
-    >
-      <TileLayer
-        url={LIGHT_TILE_URL}
-        attribution={LIGHT_TILE_ATTRIBUTION}
-        detectRetina
-      />
-      {geojson && (
-        <GeoJSON
-          data={geojson}
-          style={style}
-          onEachFeature={onEachFeature}
-          filter={featureFilter}
+    <div className="geo-map">
+      <MapContainer
+        key={`${geojsonUrl}:${filterKey ?? ''}`}
+        center={center}
+        zoom={zoom}
+        minZoom={minZoom}
+        maxZoom={maxZoom}
+        maxBounds={maxBounds}
+        maxBoundsViscosity={1.0}
+        zoomControl={false}
+        style={{ height: '100%', width: '100%' }}
+      >
+        <TileLayer
+          url={LIGHT_TILE_URL}
+          attribution={LIGHT_TILE_ATTRIBUTION}
+          detectRetina
         />
+        {geojson && (
+          <GeoJSON
+            data={geojson}
+            style={style}
+            onEachFeature={onEachFeature}
+            filter={featureFilter}
+          />
+        )}
+      </MapContainer>
+
+      {(loading || error) && (
+        <div className="geo-map__overlay">
+          {loading && <p className="geo-map__overlay-text">読み込み中…</p>}
+          {error && (
+            <>
+              <p className="geo-map__overlay-text">
+                地図データの読み込みに失敗しました。
+              </p>
+              <button type="button" className="geo-map__retry" onClick={retry}>
+                再試行
+              </button>
+            </>
+          )}
+        </div>
       )}
-    </MapContainer>
+    </div>
   )
 }

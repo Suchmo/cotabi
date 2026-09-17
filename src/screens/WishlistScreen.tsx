@@ -21,7 +21,10 @@ export function WishlistScreen() {
   const { showToast } = useToast()
 
   const [wishes, setWishes] = useState<Wish[] | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const [placeQuery, setPlaceQuery] = useState('')
   const [placeResults, setPlaceResults] = useState<PlaceResult[]>([])
@@ -34,8 +37,16 @@ export function WishlistScreen() {
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
+  const loadWishes = () => {
+    setLoadError(null)
+    listWishes()
+      .then(setWishes)
+      .catch(() => setLoadError('読み込みに失敗しました。'))
+  }
+
   useEffect(() => {
-    listWishes().then(setWishes)
+    loadWishes()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // 既存のスポット位置検索(SpotFields)と同じ、Nominatim利用規約に沿った
@@ -118,9 +129,17 @@ export function WishlistScreen() {
   }
 
   const handleDelete = async (id: string) => {
-    await deleteWish(id)
-    setWishes((prev) => (prev ? prev.filter((w) => w.id !== id) : prev))
-    showToast('削除しました')
+    setDeletingId(id)
+    setDeleteError(null)
+    try {
+      await deleteWish(id)
+      setWishes((prev) => (prev ? prev.filter((w) => w.id !== id) : prev))
+      showToast('削除しました')
+    } catch {
+      setDeleteError('削除に失敗しました。時間をおいて再度お試しください。')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   return (
@@ -207,10 +226,21 @@ export function WishlistScreen() {
       )}
 
       <div className="wishlist-screen__list">
-        {wishes === null && <p className="wishlist-screen__status">読み込み中…</p>}
+        {wishes === null && !loadError && (
+          <p className="wishlist-screen__status">読み込み中…</p>
+        )}
+        {loadError && (
+          <div className="wishlist-screen__load-error">
+            <p className="wishlist-screen__error">{loadError}</p>
+            <button type="button" onClick={loadWishes}>
+              再試行
+            </button>
+          </div>
+        )}
         {wishes?.length === 0 && (
           <p className="wishlist-screen__status">まだ登録がありません。</p>
         )}
+        {deleteError && <p className="wishlist-screen__error">{deleteError}</p>}
         {wishes?.map((wish) => (
           <div key={wish.id} className="wishlist-screen__item">
             <div className="wishlist-screen__item-body">
@@ -224,6 +254,7 @@ export function WishlistScreen() {
               type="button"
               className="wishlist-screen__delete"
               onClick={() => handleDelete(wish.id)}
+              disabled={deletingId === wish.id}
               aria-label="削除"
             >
               <Trash2 size={16} strokeWidth={1.5} />

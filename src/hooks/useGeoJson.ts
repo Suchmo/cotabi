@@ -1,34 +1,51 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 const cache = new Map<string, GeoJSON.FeatureCollection>()
 
+type GeoJsonState = {
+  data: GeoJSON.FeatureCollection | null
+  loading: boolean
+  error: boolean
+}
+
 export function useGeoJson(url: string) {
-  const [data, setData] = useState<GeoJSON.FeatureCollection | null>(
-    cache.get(url) ?? null,
-  )
+  const [state, setState] = useState<GeoJsonState>(() => {
+    const cached = cache.get(url)
+    return { data: cached ?? null, loading: !cached, error: false }
+  })
+  const [retryToken, setRetryToken] = useState(0)
 
   useEffect(() => {
     const cached = cache.get(url)
     if (cached) {
-      setData(cached)
+      setState({ data: cached, loading: false, error: false })
       return
     }
 
     let cancelled = false
-    setData(null)
+    setState({ data: null, loading: true, error: false })
 
     fetch(url)
-      .then((res) => res.json())
-      .then((json: GeoJSON.FeatureCollection) => {
+      .then((res) => {
+        if (!res.ok) throw new Error(`GeoJSON fetch failed: ${res.status}`)
+        return res.json() as Promise<GeoJSON.FeatureCollection>
+      })
+      .then((json) => {
         if (cancelled) return
         cache.set(url, json)
-        setData(json)
+        setState({ data: json, loading: false, error: false })
+      })
+      .catch(() => {
+        if (cancelled) return
+        setState({ data: null, loading: false, error: true })
       })
 
     return () => {
       cancelled = true
     }
-  }, [url])
+  }, [url, retryToken])
 
-  return data
+  const retry = useCallback(() => setRetryToken((t) => t + 1), [])
+
+  return { ...state, retry }
 }

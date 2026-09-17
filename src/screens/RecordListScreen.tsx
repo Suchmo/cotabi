@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ChevronDown, ChevronUp, Plus, SlidersHorizontal } from 'lucide-react'
 import { listSpotsWithTrips, type SpotWithTripTitle } from '../lib/records'
 import { listPhotosBySpotId } from '../lib/photos'
@@ -29,12 +29,37 @@ type Filters = {
   tags: string[]
 }
 
-const EMPTY_FILTERS: Filters = {
-  startDate: '',
-  endDate: '',
-  countryCode: '',
-  prefectureCode: '',
-  tags: [],
+// 詳細画面へ遷移して「戻る」で復帰した際にも絞り込み条件が維持されるよう、
+// ローカルstateではなくURLのクエリパラメータを唯一の情報源として扱う。
+function filtersFromSearchParams(params: URLSearchParams): Filters {
+  const tags = params.get('tags')
+  return {
+    startDate: params.get('start') ?? '',
+    endDate: params.get('end') ?? '',
+    countryCode: params.get('country') ?? '',
+    prefectureCode: params.get('prefecture') ?? '',
+    tags: tags ? tags.split(',').filter(Boolean) : [],
+  }
+}
+
+function searchParamsFromFilters(filters: Filters): URLSearchParams {
+  const params = new URLSearchParams()
+  if (filters.startDate) params.set('start', filters.startDate)
+  if (filters.endDate) params.set('end', filters.endDate)
+  if (filters.countryCode) params.set('country', filters.countryCode)
+  if (filters.prefectureCode) params.set('prefecture', filters.prefectureCode)
+  if (filters.tags.length > 0) params.set('tags', filters.tags.join(','))
+  return params
+}
+
+function hasAnyFilter(filters: Filters): boolean {
+  return (
+    !!filters.startDate ||
+    !!filters.endDate ||
+    !!filters.countryCode ||
+    !!filters.prefectureCode ||
+    filters.tags.length > 0
+  )
 }
 
 function matchesFilters(spot: SpotWithTripTitle, filters: Filters): boolean {
@@ -117,8 +142,19 @@ export function RecordListScreen() {
   )
   const [error, setError] = useState<string | null>(null)
 
-  const [filtersOpen, setFiltersOpen] = useState(false)
-  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const filters = useMemo(() => filtersFromSearchParams(searchParams), [searchParams])
+  // 絞り込み条件付きのURLで(記録一覧に)直接戻ってきた場合、パネルが
+  // 閉じたままだと「なぜ件数が少ないのか」が分かりにくいため、最初から
+  // 開いた状態にしておく。
+  const [filtersOpen, setFiltersOpen] = useState(() => hasAnyFilter(filters))
+
+  const updateFilters = (
+    patch: Partial<Filters> | ((prev: Filters) => Filters),
+  ) => {
+    const next = typeof patch === 'function' ? patch(filters) : { ...filters, ...patch }
+    setSearchParams(searchParamsFromFilters(next), { replace: true })
+  }
 
   useEffect(() => {
     Promise.all([listSpotsWithTrips(), listPhotosBySpotId()])
@@ -135,12 +171,7 @@ export function RecordListScreen() {
     return Array.from(tags)
   }, [spots])
 
-  const hasActiveFilters =
-    !!filters.startDate ||
-    !!filters.endDate ||
-    !!filters.countryCode ||
-    !!filters.prefectureCode ||
-    filters.tags.length > 0
+  const hasActiveFilters = hasAnyFilter(filters)
 
   const filteredSpots = useMemo(
     () => (spots ?? []).filter((spot) => matchesFilters(spot, filters)),
@@ -153,7 +184,7 @@ export function RecordListScreen() {
   )
 
   const toggleTag = (tag: string) => {
-    setFilters((prev) => ({
+    updateFilters((prev) => ({
       ...prev,
       tags: prev.tags.includes(tag)
         ? prev.tags.filter((t) => t !== tag)
@@ -161,7 +192,7 @@ export function RecordListScreen() {
     }))
   }
 
-  const clearFilters = () => setFilters(EMPTY_FILTERS)
+  const clearFilters = () => setSearchParams(new URLSearchParams(), { replace: true })
 
   return (
     <div className="record-list">
@@ -198,7 +229,7 @@ export function RecordListScreen() {
                   type="date"
                   value={filters.startDate}
                   onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, startDate: e.target.value }))
+                    updateFilters((prev) => ({ ...prev, startDate: e.target.value }))
                   }
                 />
               </label>
@@ -208,7 +239,7 @@ export function RecordListScreen() {
                   type="date"
                   value={filters.endDate}
                   onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, endDate: e.target.value }))
+                    updateFilters((prev) => ({ ...prev, endDate: e.target.value }))
                   }
                 />
               </label>
@@ -219,7 +250,7 @@ export function RecordListScreen() {
               <Combobox
                 value={filters.countryCode}
                 onChange={(value) =>
-                  setFilters((prev) => ({
+                  updateFilters((prev) => ({
                     ...prev,
                     countryCode: value,
                     prefectureCode: '',
@@ -235,7 +266,7 @@ export function RecordListScreen() {
                 <Combobox
                   value={filters.prefectureCode}
                   onChange={(value) =>
-                    setFilters((prev) => ({ ...prev, prefectureCode: value }))
+                    updateFilters((prev) => ({ ...prev, prefectureCode: value }))
                   }
                   options={PREFECTURE_FILTER_OPTIONS}
                   placeholder="都道府県名で検索"
@@ -339,8 +370,9 @@ function SpotCard({
           {photos.map((photo) => (
             <img
               key={photo.id}
-              src={photo.downloadUrl}
+              src={photo.thumbnailUrl}
               alt=""
+              loading="lazy"
               className="record-list__photo-thumb"
             />
           ))}

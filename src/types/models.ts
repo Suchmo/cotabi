@@ -58,10 +58,16 @@ export type Wish = {
 // docs/screen_design_v4.md のER図(PHOTO)に対応。
 // downloadUrl はER図にはないが、Storageから毎回getDownloadURLし直さずに
 // 一覧表示できるよう、アップロード時に取得したURLを保持する。
+// thumbnailStoragePath/thumbnailUrlは一覧・サムネイル表示専用の縮小版
+// (長辺300px程度)。サムネイル生成前にアップロードされた旧データには
+// 存在しないため、読み込み側(firestoreMappers.photoFromDoc)でフルサイズ
+// 画像へフォールバックする。
 export type Photo = {
   id: string
   spotId: string
   storagePath: string
   downloadUrl: string
+  thumbnailStoragePath: string
+  thumbnailUrl: string
   uploadedAt: Timestamp | null
 }

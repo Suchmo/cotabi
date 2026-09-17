@@ -99,6 +99,7 @@ export function SpotDetailScreen() {
               key={photo.id}
               src={photo.downloadUrl}
               alt=""
+              loading="lazy"
               className="spot-detail__photo"
             />
           ))}
