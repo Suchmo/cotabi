@@ -10,6 +10,7 @@ export function tripFromDoc(doc: QueryDocumentSnapshot): Trip {
     prefectureCode: data.prefectureCode ?? null,
     startDate: data.startDate,
     endDate: data.endDate,
+    costYen: (data.costYen as number | undefined) ?? null,
     createdBy: data.createdBy,
     createdByEmail: data.createdByEmail ?? null,
     createdAt: data.createdAt ?? null,

@@ -48,6 +48,7 @@ export function RecordFormScreen() {
   const [tripTitle, setTripTitle] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [costYen, setCostYen] = useState('')
   const [spotBlocks, setSpotBlocks] = useState<SpotBlock[]>([
     { id: crypto.randomUUID(), ...createEmptySpotFieldsValue(todayAsDateInputValue()) },
   ])
@@ -103,6 +104,7 @@ export function RecordFormScreen() {
           tripTitle,
           startDate: startDate || null,
           endDate: endDate || null,
+          costYen: costYen.trim() ? Number(costYen) : null,
           spots: spotBlocks.map(toSpotInput),
           userId: user.uid,
           userEmail: user.email,
@@ -186,6 +188,17 @@ export function RecordFormScreen() {
                   />
                 </label>
               </div>
+              <label>
+                費用(円・任意)
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  step="1"
+                  value={costYen}
+                  onChange={(e) => setCostYen(e.target.value)}
+                />
+              </label>
 
               {spotBlocks.map((block, index) => (
                 <div key={block.id} className="record-form__spot-block">

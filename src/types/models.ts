@@ -9,6 +9,9 @@ export type Trip = {
   prefectureCode: string | null
   startDate: string
   endDate: string
+  // 簡易費用記録(Phase3)。旅行全体でのおおまかな合計金額(円)のみを扱い、
+  // 内訳管理はしない。未入力ならnull。
+  costYen: number | null
   createdBy: string
   createdByEmail: string | null
   createdAt: Timestamp | null

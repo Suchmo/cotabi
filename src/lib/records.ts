@@ -6,6 +6,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  updateDoc,
   writeBatch,
 } from 'firebase/firestore'
 import { db } from './firebase'
@@ -32,6 +33,8 @@ export type CreateTripInput = {
   // 空ならスポットの日付から自動算出する
   startDate: string | null
   endDate: string | null
+  // 簡易費用記録(Phase3、任意)。旅行全体のおおまかな合計金額(円)
+  costYen: number | null
   spots: SpotInput[]
   userId: string
   userEmail: string | null
@@ -57,6 +60,7 @@ export async function createTripWithSpots(input: CreateTripInput): Promise<{
     prefectureCode: firstSpot.prefectureCode,
     startDate: input.startDate || visitedDates[0],
     endDate: input.endDate || visitedDates[visitedDates.length - 1],
+    costYen: input.costYen,
     createdBy: input.userId,
     createdByEmail: input.userEmail,
     createdAt: serverTimestamp(),
@@ -85,6 +89,13 @@ export async function createTripWithSpots(input: CreateTripInput): Promise<{
   await batch.commit()
 
   return { tripId: tripRef.id, spotIds }
+}
+
+export async function updateTripCost(
+  tripId: string,
+  costYen: number | null,
+): Promise<void> {
+  await updateDoc(doc(tripsCollection, tripId), { costYen })
 }
 
 export async function listTrips(): Promise<Trip[]> {
@@ -163,6 +174,7 @@ export async function getTripWithSpots(tripId: string): Promise<{
   title: string
   countryCode: string
   prefectureCode: string | null
+  costYen: number | null
   spots: SpotWithPhotos[]
 } | null> {
   const [tripsSnap, spotsSnap, photosBySpotId] = await Promise.all([
@@ -192,6 +204,7 @@ export async function getTripWithSpots(tripId: string): Promise<{
     title: tripData.title as string,
     countryCode: tripData.countryCode as string,
     prefectureCode: (tripData.prefectureCode ?? null) as string | null,
+    costYen: (tripData.costYen as number | undefined) ?? null,
     spots,
   }
 }
