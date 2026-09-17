@@ -30,13 +30,23 @@
   font-weight: 500;
 }
 
-.map-screen__list-link {
+.map-screen__links {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 8px;
   flex-shrink: 0;
+}
+
+.map-screen__list-link {
+  flex: 1;
   min-height: 44px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
   font-size: 13px;
   color: var(--color-text-secondary);
   text-decoration: none;

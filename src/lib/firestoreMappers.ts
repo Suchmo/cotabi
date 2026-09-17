@@ -1,5 +1,5 @@
 import type { QueryDocumentSnapshot } from 'firebase/firestore'
-import type { Spot, Trip } from '../types/models'
+import type { Spot, Trip, Wish } from '../types/models'
 
 export function tripFromDoc(doc: QueryDocumentSnapshot): Trip {
   const data = doc.data()
@@ -31,6 +31,22 @@ export function spotFromDoc(doc: QueryDocumentSnapshot): Spot {
     tags: (data.tags as string[] | undefined) ?? [],
     recordedBy: data.recordedBy,
     recordedByEmail: data.recordedByEmail ?? null,
+    createdAt: data.createdAt ?? null,
+  }
+}
+
+export function wishFromDoc(doc: QueryDocumentSnapshot): Wish {
+  const data = doc.data()
+  return {
+    id: doc.id,
+    placeName: data.placeName,
+    countryCode: data.countryCode ?? null,
+    prefectureCode: data.prefectureCode ?? null,
+    latitude: data.latitude,
+    longitude: data.longitude,
+    memo: data.memo ?? '',
+    createdBy: data.createdBy,
+    createdByEmail: data.createdByEmail ?? null,
     createdAt: data.createdAt ?? null,
   }
 }

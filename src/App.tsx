@@ -10,6 +10,7 @@ import { RecordListScreen } from './screens/RecordListScreen'
 import { RegionDetailScreen } from './screens/RegionDetailScreen'
 import { TripDetailScreen } from './screens/TripDetailScreen'
 import { SpotDetailScreen } from './screens/SpotDetailScreen'
+import { WishlistScreen } from './screens/WishlistScreen'
 import { useAuth } from './hooks/useAuth'
 import { useLock } from './hooks/useLock'
 import './App.css'
@@ -46,6 +47,7 @@ function App() {
           <Route path="/region/:kind/:code" element={<RegionDetailScreen />} />
           <Route path="/trips/:tripId" element={<TripDetailScreen />} />
           <Route path="/spots/:spotId" element={<SpotDetailScreen />} />
+          <Route path="/wishlist" element={<WishlistScreen />} />
         </Routes>
       </main>
       <BottomTabBar />

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Images, Plus } from 'lucide-react'
+import { Heart, Images, Plus } from 'lucide-react'
 import { GeoMap } from '../components/GeoMap'
 import { FlashbackCards } from '../components/FlashbackCards'
 import { useVisitedLocations } from '../hooks/useVisitedLocations'
@@ -59,9 +59,15 @@ export function MapScreen() {
             {REGION_LABEL[key]}
           </button>
         ))}
+      </div>
+      <div className="map-screen__links">
         <Link to="/records" className="map-screen__list-link">
           <Images size={16} strokeWidth={1.5} />
           記録一覧
+        </Link>
+        <Link to="/wishlist" className="map-screen__list-link">
+          <Heart size={16} strokeWidth={1.5} />
+          ウィッシュリスト
         </Link>
       </div>
       <FlashbackCards />

@@ -1,0 +1,9 @@
+.wish-marker__dot {
+  display: block;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px dashed var(--color-accent);
+  background: var(--color-bg);
+}
