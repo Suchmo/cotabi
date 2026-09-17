@@ -30,18 +30,16 @@
   color: var(--color-text);
 }
 
-/* 見出し直下のインラインな二次アクションのため、他の主要ボタンと同じ
-   44pxではなく、削除バッジ等と同様の小さめのタップ領域にとどめる。 */
 .trip-detail__cost-edit {
   display: flex;
   align-items: center;
   gap: 4px;
-  min-height: 28px;
-  padding: 2px 10px;
+  min-height: 44px;
+  padding: 8px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   background: transparent;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--color-text-secondary);
 }
 

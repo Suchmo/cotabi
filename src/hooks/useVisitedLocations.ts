@@ -1,6 +1,7 @@
-import { collection, getDocs } from 'firebase/firestore'
+import { collection } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 import { db } from '../lib/firebase'
+import { getDocsCached } from '../lib/queryCache'
 
 export type VisitedLocations = {
   countryCodes: Set<string>
@@ -24,7 +25,7 @@ export function useVisitedLocations(): VisitedLocations {
   useEffect(() => {
     let cancelled = false
 
-    getDocs(spotsCollection).then((snapshot) => {
+    getDocsCached('spots', spotsCollection).then((snapshot) => {
       if (cancelled) return
 
       const countries = new Set<string>()

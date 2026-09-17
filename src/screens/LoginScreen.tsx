@@ -28,6 +28,10 @@ export function LoginScreen() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
+    if (!email.trim() || !password) {
+      setError('メールアドレスとパスワードを入力してください。')
+      return
+    }
     setSubmitting(true)
     try {
       await signInWithEmailAndPassword(auth, email, password)
@@ -40,7 +44,10 @@ export function LoginScreen() {
 
   return (
     <div className="login-screen">
-      <form className="login-screen__card" onSubmit={handleSubmit}>
+      {/* ブラウザ標準の必須項目バリデーション吹き出しはダークテーマと
+          見た目が合わないため、noValidateで無効化し、上のhandleSubmitでの
+          チェック+下の.login-screen__errorでの表示に統一する。 */}
+      <form className="login-screen__card" onSubmit={handleSubmit} noValidate>
         <h1 className="login-screen__title">COTABI</h1>
         <label>
           メールアドレス

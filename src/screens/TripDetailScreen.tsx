@@ -9,6 +9,7 @@ import {
 } from '../lib/records'
 import { formatDistinctLocationsLabel } from '../lib/locationLabel'
 import { BackLink } from '../components/BackLink'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { useToast } from '../hooks/useToast'
 import './TripDetailScreen.css'
 
@@ -44,6 +45,7 @@ export function TripDetailScreen() {
 
   const [deletingTrip, setDeletingTrip] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   useEffect(() => {
     if (!tripId) return
@@ -82,14 +84,14 @@ export function TripDetailScreen() {
     }
   }
 
+  const deleteConfirmMessage =
+    trip && trip.spots.length > 0
+      ? `この旅行と、含まれる全スポット(${trip.spots.length}件)・写真をすべて削除します。この操作は取り消せません。`
+      : 'この旅行を削除します。この操作は取り消せません。'
+
   const handleDeleteTrip = async () => {
-    if (!tripId || !trip) return
-    const spotCount = trip.spots.length
-    const confirmMessage =
-      spotCount > 0
-        ? `この旅行と、含まれる全スポット(${spotCount}件)・写真をすべて削除します。この操作は取り消せません。`
-        : 'この旅行を削除します。この操作は取り消せません。'
-    if (!window.confirm(confirmMessage)) return
+    setConfirmOpen(false)
+    if (!tripId) return
 
     setDeletingTrip(true)
     setDeleteError(null)
@@ -248,7 +250,7 @@ export function TripDetailScreen() {
           <button
             type="button"
             className="trip-detail__delete-trip"
-            onClick={handleDeleteTrip}
+            onClick={() => setConfirmOpen(true)}
             disabled={deletingTrip}
           >
             <Trash2 size={14} strokeWidth={1.5} />
@@ -257,6 +259,13 @@ export function TripDetailScreen() {
           {deleteError && <p className="trip-detail__delete-error">{deleteError}</p>}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        message={deleteConfirmMessage}
+        onConfirm={handleDeleteTrip}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   )
 }

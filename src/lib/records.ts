@@ -13,6 +13,7 @@ import {
 import { db } from './firebase'
 import { spotFromDoc, tripFromDoc } from './firestoreMappers'
 import { deletePhotoFiles, getPhotosForSpot, listPhotosBySpotId } from './photos'
+import { getDocsCached, invalidateDocsCache } from './queryCache'
 import type { Photo, Spot, Trip } from '../types/models'
 
 const tripsCollection = collection(db, 'trips')
@@ -88,6 +89,8 @@ export async function createTripWithSpots(input: CreateTripInput): Promise<{
   }
 
   await batch.commit()
+  invalidateDocsCache('trips')
+  invalidateDocsCache('spots')
 
   return { tripId: tripRef.id, spotIds }
 }
@@ -97,10 +100,11 @@ export async function updateTripCost(
   costYen: number | null,
 ): Promise<void> {
   await updateDoc(doc(tripsCollection, tripId), { costYen })
+  invalidateDocsCache('trips')
 }
 
 export async function listTrips(): Promise<Trip[]> {
-  const snapshot = await getDocs(tripsCollection)
+  const snapshot = await getDocsCached('trips', tripsCollection)
   return snapshot.docs
     .map(tripFromDoc)
     .sort((a, b) => (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0))
@@ -140,6 +144,7 @@ export async function addSpotToTrip(input: AddSpotInput) {
     recordedByEmail: input.userEmail,
     createdAt: serverTimestamp(),
   })
+  invalidateDocsCache('spots')
 
   return { spotId: spotRef.id }
 }
@@ -148,7 +153,7 @@ export type SpotWithTripTitle = Spot & { tripTitle: string | null }
 
 export async function listSpotsWithTrips(): Promise<SpotWithTripTitle[]> {
   const [tripsSnap, spotsSnap] = await Promise.all([
-    getDocs(tripsCollection),
+    getDocsCached('trips', tripsCollection),
     getDocs(query(spotsCollection, orderBy('createdAt', 'desc'))),
   ])
 
@@ -179,8 +184,8 @@ export async function getTripWithSpots(tripId: string): Promise<{
   spots: SpotWithPhotos[]
 } | null> {
   const [tripsSnap, spotsSnap, photosBySpotId] = await Promise.all([
-    getDocs(tripsCollection),
-    getDocs(spotsCollection),
+    getDocsCached('trips', tripsCollection),
+    getDocsCached('spots', spotsCollection),
     listPhotosBySpotId(),
   ])
 
@@ -222,8 +227,8 @@ export type FlashbackSpot = {
 // 今年記録されたばかりのもの(yearsAgo === 0)は「思い出」ではないため除外する。
 export async function listFlashbackSpots(): Promise<FlashbackSpot[]> {
   const [tripsSnap, spotsSnap, photosBySpotId] = await Promise.all([
-    getDocs(tripsCollection),
-    getDocs(spotsCollection),
+    getDocsCached('trips', tripsCollection),
+    getDocsCached('spots', spotsCollection),
     listPhotosBySpotId(),
   ])
 
@@ -276,6 +281,8 @@ export async function deleteSpot(spotId: string): Promise<void> {
   photos.forEach((photo) => batch.delete(doc(db, 'photos', photo.id)))
   batch.delete(doc(spotsCollection, spotId))
   await batch.commit()
+  invalidateDocsCache('spots')
+  invalidateDocsCache('photos')
 }
 
 // 旅行1件と、それに含まれる全スポット・全写真をまとめて削除する。
@@ -295,12 +302,15 @@ export async function deleteTrip(tripId: string): Promise<void> {
   spotsSnap.docs.forEach((spotDoc) => batch.delete(spotDoc.ref))
   batch.delete(doc(tripsCollection, tripId))
   await batch.commit()
+  invalidateDocsCache('trips')
+  invalidateDocsCache('spots')
+  invalidateDocsCache('photos')
 }
 
 export async function getSpotDetail(spotId: string): Promise<SpotDetail | null> {
   const [spotsSnap, tripsSnap, photosBySpotId] = await Promise.all([
-    getDocs(spotsCollection),
-    getDocs(tripsCollection),
+    getDocsCached('spots', spotsCollection),
+    getDocsCached('trips', tripsCollection),
     listPhotosBySpotId(),
   ])
 

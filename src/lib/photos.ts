@@ -10,6 +10,7 @@ import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage
 import { db, storage } from './firebase'
 import { compressImage } from './imageCompression'
 import { photoFromDoc } from './firestoreMappers'
+import { getDocsCached, invalidateDocsCache } from './queryCache'
 import type { Photo } from '../types/models'
 
 const photosCollection = collection(db, 'photos')
@@ -51,6 +52,7 @@ export async function uploadPhotosForSpot(
       })
     }),
   )
+  invalidateDocsCache('photos')
 }
 
 export async function getPhotosForSpot(spotId: string): Promise<Photo[]> {
@@ -78,7 +80,7 @@ export async function deletePhotoFiles(photos: Photo[]): Promise<void> {
 }
 
 export async function listPhotosBySpotId(): Promise<Map<string, Photo[]>> {
-  const snapshot = await getDocs(photosCollection)
+  const snapshot = await getDocsCached('photos', photosCollection)
   const bySpotId = new Map<string, Photo[]>()
 
   snapshot.docs.forEach((doc) => {

@@ -129,8 +129,8 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  min-height: 36px;
-  padding: 4px 12px;
+  min-height: 44px;
+  padding: 8px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   background: transparent;
@@ -197,9 +197,11 @@
   gap: 8px;
 }
 
-/* タグは画面幅に応じて折り返す小さなチップの集合であり、個数も可変なため、
-   スポット削除ボタン(36px)と同様に44pxの目安は適用せず、視認・誤タップ
-   しにくい範囲でコンパクトに保つ。 */
+/* タップ領域の例外(design_system.mdの全体方針): 44pxが既定だが、周囲の
+   レイアウトを崩さずには44px化できない二次的・低頻度の操作に限り、44px未満の
+   タップ領域を許容する。ここではタグが画面幅に応じて折り返す小さなチップの
+   集合であり、個数も可変なため、44pxにすると多数のタグがある時に縦方向へ
+   大きく間延びしてしまうことが理由。 */
 .record-form__tag-options {
   display: flex;
   flex-wrap: wrap;
@@ -337,8 +339,11 @@
   border-radius: 8px;
 }
 
-/* この削除バッジは84px角サムネイルの隅に乗せる小さい二次アクションのため、
-   44pxの目安は適用せず、視認・誤タップしにくい範囲で少しだけ広げるにとどめる */
+/* タップ領域の例外(design_system.mdの全体方針): 44pxが既定だが、周囲の
+   レイアウトを崩さずには44px化できない二次的・低頻度の操作に限り、44px未満の
+   タップ領域を許容する。ここでは84px角サムネイルの隅に乗せる削除バッジで、
+   44pxにすると84px角の枠をはみ出し隣のサムネイルと重なってしまうことが理由。
+   視認・誤タップしにくい範囲で少しだけ広げるにとどめる。 */
 .record-form__photo-thumb button {
   position: absolute;
   top: -8px;

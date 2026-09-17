@@ -103,7 +103,11 @@ export function WishlistScreen() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!user || !selectedPlace || !placeName.trim()) return
+    if (!user || !selectedPlace) return
+    if (!placeName.trim()) {
+      setFormError('場所名を入力してください。')
+      return
+    }
 
     setSaving(true)
     setFormError(null)
@@ -162,8 +166,11 @@ export function WishlistScreen() {
         {showAddForm ? '閉じる' : '行きたい場所を追加'}
       </button>
 
+      {/* ブラウザ標準の必須項目バリデーション吹き出しはダークテーマと
+          見た目が合わないため、noValidateで無効化し、handleSubmitでの
+          チェック+.wishlist-screen__errorでの表示に統一する。 */}
       {showAddForm && (
-        <form className="wishlist-screen__form" onSubmit={handleSubmit}>
+        <form className="wishlist-screen__form" onSubmit={handleSubmit} noValidate>
           <label>
             場所を検索
             <input

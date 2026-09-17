@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react'
 import { deleteSpot, getSpotDetail, type SpotDetail } from '../lib/records'
 import { formatLocationLabel } from '../lib/locationLabel'
 import { BackLink } from '../components/BackLink'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { useToast } from '../hooks/useToast'
 import './SpotDetailScreen.css'
 
@@ -20,6 +21,7 @@ export function SpotDetailScreen() {
   const [notFound, setNotFound] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   useEffect(() => {
     if (!spotId) return
@@ -37,10 +39,8 @@ export function SpotDetailScreen() {
     : '/records'
 
   const handleDelete = async () => {
+    setConfirmOpen(false)
     if (!spotId) return
-    if (!window.confirm('この記録を削除しますか?この操作は取り消せません。')) {
-      return
-    }
     setDeleting(true)
     setDeleteError(null)
     try {
@@ -113,7 +113,7 @@ export function SpotDetailScreen() {
           <button
             type="button"
             className="spot-detail__delete"
-            onClick={handleDelete}
+            onClick={() => setConfirmOpen(true)}
             disabled={deleting}
           >
             <Trash2 size={14} strokeWidth={1.5} />
@@ -122,6 +122,13 @@ export function SpotDetailScreen() {
           {deleteError && <p className="spot-detail__delete-error">{deleteError}</p>}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        message="この記録を削除しますか?この操作は取り消せません。"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   )
 }

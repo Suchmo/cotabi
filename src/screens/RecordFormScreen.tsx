@@ -52,6 +52,12 @@ function isSpotDirty(spot: SpotFieldsValue): boolean {
   )
 }
 
+function validateSpot(spot: SpotFieldsValue, label: string): string | null {
+  if (!spot.spotName.trim()) return `${label}のスポット名を入力してください。`
+  if (!spot.visitedAt) return `${label}の日付を入力してください。`
+  return null
+}
+
 function buildSaveMessage(hasPhotoFailure: boolean, synced: boolean): string {
   if (hasPhotoFailure) {
     return synced
@@ -164,7 +170,33 @@ export function RecordFormScreen() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!user) return
-    if (mode === 'existing-trip' && !selectedTripId) return
+
+    // ブラウザ標準の必須項目バリデーション吹き出しはダークテーマと見た目が
+    // 合わないため、フォーム側はnoValidateにして無効化し、ここで独自に
+    // チェックして.record-form__errorで表示する。
+    if (mode === 'new-trip') {
+      if (!tripTitle.trim()) {
+        setError('旅行名を入力してください。')
+        return
+      }
+      for (let i = 0; i < spotBlocks.length; i++) {
+        const spotError = validateSpot(spotBlocks[i], `スポット${i + 1}`)
+        if (spotError) {
+          setError(spotError)
+          return
+        }
+      }
+    } else {
+      if (!selectedTripId) {
+        setError('旅行を選択してください。')
+        return
+      }
+      const spotError = validateSpot(existingSpot, 'スポット')
+      if (spotError) {
+        setError(spotError)
+        return
+      }
+    }
 
     setSubmitting(true)
     setError(null)
@@ -233,7 +265,7 @@ export function RecordFormScreen() {
 
   return (
     <div className="record-form">
-      <form onSubmit={handleSubmit} className="record-form__form">
+      <form onSubmit={handleSubmit} className="record-form__form" noValidate>
         <div className="record-form__scroll">
           <h1>記録を作成</h1>
           <div className="record-form__mode-toggle">
