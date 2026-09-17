@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Images, Plus } from 'lucide-react'
 import { GeoMap } from '../components/GeoMap'
+import { FlashbackCards } from '../components/FlashbackCards'
 import { useVisitedLocations } from '../hooks/useVisitedLocations'
 import {
   REGION_CENTER,
@@ -63,6 +64,7 @@ export function MapScreen() {
           記録一覧
         </Link>
       </div>
+      <FlashbackCards />
       {region === 'world' && (
         <div className="map-screen__continent-filter">
           <select

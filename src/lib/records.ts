@@ -192,6 +192,54 @@ export async function getTripWithSpots(tripId: string): Promise<{
   }
 }
 
+export type FlashbackSpot = {
+  spot: Spot
+  yearsAgo: number
+  tripTitle: string | null
+  thumbnailUrl: string | null
+}
+
+// 思い出フラッシュバック(Phase2)。今日と同じ月日(年は問わない)に記録された
+// 過去のスポットを、経過年数(yearsAgo、1以上)とともに返す。同じ月日でも
+// 今年記録されたばかりのもの(yearsAgo === 0)は「思い出」ではないため除外する。
+export async function listFlashbackSpots(): Promise<FlashbackSpot[]> {
+  const [tripsSnap, spotsSnap, photosBySpotId] = await Promise.all([
+    getDocs(tripsCollection),
+    getDocs(spotsCollection),
+    listPhotosBySpotId(),
+  ])
+
+  const tripTitleById = new Map<string, string>()
+  tripsSnap.forEach((doc) => {
+    tripTitleById.set(doc.id, doc.data().title as string)
+  })
+
+  const today = new Date()
+  const todayMonth = today.getMonth() + 1
+  const todayDate = today.getDate()
+  const todayYear = today.getFullYear()
+
+  const results: FlashbackSpot[] = []
+  spotsSnap.docs.forEach((doc) => {
+    const spot = spotFromDoc(doc)
+    const [yearStr, monthStr, dayStr] = spot.visitedAt.split('-')
+    if (Number(monthStr) !== todayMonth || Number(dayStr) !== todayDate) return
+
+    const yearsAgo = todayYear - Number(yearStr)
+    if (yearsAgo <= 0) return
+
+    const photos = photosBySpotId.get(spot.id) ?? []
+    results.push({
+      spot,
+      yearsAgo,
+      tripTitle: spot.tripId ? (tripTitleById.get(spot.tripId) ?? null) : null,
+      thumbnailUrl: photos[0]?.downloadUrl ?? null,
+    })
+  })
+
+  return results.sort((a, b) => a.yearsAgo - b.yearsAgo)
+}
+
 export type SpotDetail = {
   spot: Spot
   tripTitle: string | null
