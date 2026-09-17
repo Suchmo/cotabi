@@ -184,3 +184,38 @@
   display: block;
   background: var(--color-placeholder);
 }
+
+/* 誤タップを避けるため、通常の(ゴールドの)操作ボタンとは離した画面下部に
+   置き、控えめな赤系のアウトライン(塗りつぶさない)で「削除」であることだけ
+   分かるようにする。 */
+.trip-detail__danger-zone {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.trip-detail__delete-trip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 0;
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-size: 13px;
+  color: var(--color-danger);
+}
+
+.trip-detail__delete-trip:disabled {
+  opacity: 0.6;
+}
+
+.trip-detail__delete-error {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--color-danger);
+  text-align: center;
+}

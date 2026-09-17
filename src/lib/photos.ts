@@ -1,5 +1,12 @@
-import { addDoc, collection, getDocs, serverTimestamp } from 'firebase/firestore'
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
+import {
+  addDoc,
+  collection,
+  getDocs,
+  query,
+  serverTimestamp,
+  where,
+} from 'firebase/firestore'
+import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { db, storage } from './firebase'
 import { compressImage } from './imageCompression'
 import type { Photo } from '../types/models'
@@ -32,6 +39,34 @@ export async function uploadPhotosForSpot(
         uploadedAt: serverTimestamp(),
       })
     }),
+  )
+}
+
+export async function getPhotosForSpot(spotId: string): Promise<Photo[]> {
+  const snapshot = await getDocs(
+    query(photosCollection, where('spotId', '==', spotId)),
+  )
+  return snapshot.docs.map((doc) => {
+    const data = doc.data()
+    return {
+      id: doc.id,
+      spotId: data.spotId,
+      storagePath: data.storagePath,
+      downloadUrl: data.downloadUrl,
+      uploadedAt: data.uploadedAt ?? null,
+    }
+  })
+}
+
+// Storage上の画像ファイルの削除のみを行う(Firestoreの写真ドキュメント自体は、
+// 呼び出し側でスポット/旅行の削除とまとめて1つのwriteBatchに含めることで、
+// 「一部だけ削除された」状態を避ける)。既に無い/失敗したファイルがあっても
+// 全体の削除操作は続行できるよう、ここではエラーを握りつぶす。
+export async function deletePhotoFiles(photos: Photo[]): Promise<void> {
+  await Promise.all(
+    photos.map((photo) =>
+      deleteObject(ref(storage, photo.storagePath)).catch(() => {}),
+    ),
   )
 }
 

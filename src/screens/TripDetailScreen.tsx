@@ -1,7 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { Pencil } from 'lucide-react'
-import { getTripWithSpots, updateTripCost, type SpotWithPhotos } from '../lib/records'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Pencil, Trash2 } from 'lucide-react'
+import {
+  deleteTrip,
+  getTripWithSpots,
+  updateTripCost,
+  type SpotWithPhotos,
+} from '../lib/records'
 import { formatDistinctLocationsLabel } from '../lib/locationLabel'
 import { BackLink } from '../components/BackLink'
 import { useToast } from '../hooks/useToast'
@@ -27,6 +32,7 @@ function dateRangeLabel(spots: SpotWithPhotos[]): string {
 
 export function TripDetailScreen() {
   const { tripId } = useParams<{ tripId: string }>()
+  const navigate = useNavigate()
   const [trip, setTrip] = useState<TripDetail | null>()
   const [notFound, setNotFound] = useState(false)
   const [view, setView] = useState<ViewMode>('timeline')
@@ -35,6 +41,9 @@ export function TripDetailScreen() {
   const [editingCost, setEditingCost] = useState(false)
   const [costInput, setCostInput] = useState('')
   const [savingCost, setSavingCost] = useState(false)
+
+  const [deletingTrip, setDeletingTrip] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!tripId) return
@@ -68,6 +77,27 @@ export function TripDetailScreen() {
       showToast('費用を保存しました')
     } finally {
       setSavingCost(false)
+    }
+  }
+
+  const handleDeleteTrip = async () => {
+    if (!tripId || !trip) return
+    const spotCount = trip.spots.length
+    const confirmMessage =
+      spotCount > 0
+        ? `この旅行と、含まれる全スポット(${spotCount}件)・写真をすべて削除します。この操作は取り消せません。`
+        : 'この旅行を削除します。この操作は取り消せません。'
+    if (!window.confirm(confirmMessage)) return
+
+    setDeletingTrip(true)
+    setDeleteError(null)
+    try {
+      await deleteTrip(tripId)
+      showToast('旅行を削除しました')
+      navigate('/records')
+    } catch {
+      setDeleteError('削除に失敗しました。時間をおいて再度お試しください。')
+      setDeletingTrip(false)
     }
   }
 
@@ -208,6 +238,21 @@ export function TripDetailScreen() {
               </div>
             ))}
         </>
+      )}
+
+      {trip && (
+        <div className="trip-detail__danger-zone">
+          <button
+            type="button"
+            className="trip-detail__delete-trip"
+            onClick={handleDeleteTrip}
+            disabled={deletingTrip}
+          >
+            <Trash2 size={14} strokeWidth={1.5} />
+            {deletingTrip ? '削除中…' : '旅行を削除'}
+          </button>
+          {deleteError && <p className="trip-detail__delete-error">{deleteError}</p>}
+        </div>
       )}
     </div>
   )

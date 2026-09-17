@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { getSpotDetail, type SpotDetail } from '../lib/records'
+import { useNavigate, useParams } from 'react-router-dom'
+import { Trash2 } from 'lucide-react'
+import { deleteSpot, getSpotDetail, type SpotDetail } from '../lib/records'
 import { formatLocationLabel } from '../lib/locationLabel'
 import { BackLink } from '../components/BackLink'
+import { useToast } from '../hooks/useToast'
 import './SpotDetailScreen.css'
 
 function locationText(latitude: number | null, longitude: number | null) {
@@ -12,8 +14,12 @@ function locationText(latitude: number | null, longitude: number | null) {
 
 export function SpotDetailScreen() {
   const { spotId } = useParams<{ spotId: string }>()
+  const navigate = useNavigate()
+  const { showToast } = useToast()
   const [detail, setDetail] = useState<SpotDetail | null>()
   const [notFound, setNotFound] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!spotId) return
@@ -29,6 +35,23 @@ export function SpotDetailScreen() {
   const backLink = detail?.spot.tripId
     ? `/trips/${detail.spot.tripId}`
     : '/records'
+
+  const handleDelete = async () => {
+    if (!spotId) return
+    if (!window.confirm('この記録を削除しますか?この操作は取り消せません。')) {
+      return
+    }
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      await deleteSpot(spotId)
+      showToast('削除しました')
+      navigate(backLink)
+    } catch {
+      setDeleteError('削除に失敗しました。時間をおいて再度お試しください。')
+      setDeleting(false)
+    }
+  }
 
   return (
     <div className="spot-detail">
@@ -83,6 +106,21 @@ export function SpotDetailScreen() {
       )}
 
       {detail && <p className="spot-detail__diary">{detail.spot.diaryText}</p>}
+
+      {detail && (
+        <div className="spot-detail__danger-zone">
+          <button
+            type="button"
+            className="spot-detail__delete"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            <Trash2 size={14} strokeWidth={1.5} />
+            {deleting ? '削除中…' : 'この記録を削除'}
+          </button>
+          {deleteError && <p className="spot-detail__delete-error">{deleteError}</p>}
+        </div>
+      )}
     </div>
   )
 }

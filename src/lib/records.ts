@@ -7,11 +7,12 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  where,
   writeBatch,
 } from 'firebase/firestore'
 import { db } from './firebase'
 import { spotFromDoc, tripFromDoc } from './firestoreMappers'
-import { listPhotosBySpotId } from './photos'
+import { deletePhotoFiles, getPhotosForSpot, listPhotosBySpotId } from './photos'
 import type { Photo, Spot, Trip } from '../types/models'
 
 const tripsCollection = collection(db, 'trips')
@@ -261,6 +262,39 @@ export type SpotDetail = {
   spot: Spot
   tripTitle: string | null
   photos: Photo[]
+}
+
+// スポット1件を削除する。紐づく写真(Storageの画像ファイル+Firestoreの
+// ドキュメント)もあわせて削除する。「一部だけ削除された」状態を避けるため、
+// Firestore側の削除(写真ドキュメント+スポット本体)は1つのwriteBatchにまとめる
+// (Storageはバッチ削除に対応していないため、別途Promise.allで実行する)。
+export async function deleteSpot(spotId: string): Promise<void> {
+  const photos = await getPhotosForSpot(spotId)
+  await deletePhotoFiles(photos)
+
+  const batch = writeBatch(db)
+  photos.forEach((photo) => batch.delete(doc(db, 'photos', photo.id)))
+  batch.delete(doc(spotsCollection, spotId))
+  await batch.commit()
+}
+
+// 旅行1件と、それに含まれる全スポット・全写真をまとめて削除する。
+export async function deleteTrip(tripId: string): Promise<void> {
+  const [spotsSnap, photosBySpotId] = await Promise.all([
+    getDocs(query(spotsCollection, where('tripId', '==', tripId))),
+    listPhotosBySpotId(),
+  ])
+
+  const photos = spotsSnap.docs.flatMap(
+    (spotDoc) => photosBySpotId.get(spotDoc.id) ?? [],
+  )
+  await deletePhotoFiles(photos)
+
+  const batch = writeBatch(db)
+  photos.forEach((photo) => batch.delete(doc(db, 'photos', photo.id)))
+  spotsSnap.docs.forEach((spotDoc) => batch.delete(spotDoc.ref))
+  batch.delete(doc(tripsCollection, tripId))
+  await batch.commit()
 }
 
 export async function getSpotDetail(spotId: string): Promise<SpotDetail | null> {
