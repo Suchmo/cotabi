@@ -1,7 +1,7 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from './firebase'
 
-// USER単位の端末ロック設定。screen_design_v4.md のUSER/TRIP/SPOT/PHOTOとは別に、
+// USER単位の端末ロック設定。screen_design_v5.md のUSER/TRIP/SPOT/PHOTOとは別に、
 // Phase2のプライバシーロック用として users/{uid} に保持する。
 export type UserLockSettings = {
   lockEnabled: boolean

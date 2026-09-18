@@ -11,7 +11,7 @@ export type VisitedLocations = {
 
 const spotsCollection = collection(db, 'spots')
 
-// docs/screen_design_v4.md の訪問済み判定ルールに従い、tripIdの有無を問わず
+// docs/screen_design_v5.md の訪問済み判定ルールに従い、tripIdの有無を問わず
 // spots に記録されている countryCode/prefectureCode をそのまま「訪問済み」とみなす
 // (trips コレクションを経由しない。単発記録にもtripIdなしでcountryCode/prefectureCodeが
 // 必ず入っている設計のため)。

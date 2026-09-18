@@ -3,13 +3,13 @@
 このファイルは、このリポジトリで作業する Claude Code に向けたガイダンスです。
 詳細仕様は `docs/` 配下のドキュメントを正とします。作業前に該当ドキュメントを確認してください。
 
-- `docs/requirements_v5.md` … 要件定義書(目的・コスト方針・アプリ形態・フェーズ別機能要件・技術スタック)
-- `docs/screen_design_v4.md` … 画面設計・データモデル仕様書(Phase1確定版。画面構成・データモデルはv3から変更なし、実装技術の読み替えのみ)
-- `docs/setup_guide_v2.md` … 環境構築手順書(PWA方針での最新セットアップ手順、進捗状況)
+- `docs/requirements_v6.md` … 要件定義書(目的・コスト方針・アプリ形態・フェーズ別機能要件と実装状況・技術スタック)
+- `docs/screen_design_v5.md` … 画面設計・データモデル仕様書(実際に存在する全画面・全コンポーネントとデータモデルを反映した最新版)
+- `docs/setup_guide_v2.md` … 環境構築手順書(PWA方針でのセットアップ手順、進捗状況)
 - `docs/architecture.md` … システム構成図(開発・デプロイ・利用時のデータの流れ、全体構成、現在の構成に至った経緯)
-- `docs/design_system.md` … デザインシステム(カラーパレット・タイポグラフィ・コンポーネントの見た目の方針。色の値は`src/styles/theme.css`のCSSカスタムプロパティにまとめて定義しており、実装時はここを参照する)
+- `docs/design_system.md` … デザインシステム(カラーパレット・タイポグラフィ・コンポーネントの見た目の方針、タップ領域方針。色の値は`src/styles/theme.css`のCSSカスタムプロパティにまとめて定義しており、実装時はここを参照する)
 
-過去バージョン(`requirements_v4.md`, `screen_design_v3.md`, `setup_guide.md` 等)がリポジトリに残っている場合、それらはネイティブiOS(SwiftUI/Xcode)時代の古い方針であり、**現在は無効**。参照する場合は上記の最新版のみとすること。
+過去バージョン(`docs/archive/` 配下の `requirements_v4.md`/`requirements_v5.md`、`screen_design_v3.md`/`screen_design_v4.md`、`setup_guide.md` 等)は履歴として残しているだけで、**現在は無効**。参照する場合は上記の最新版のみとすること。
 
 ## プロジェクト概要
 
@@ -34,15 +34,18 @@
 
 ## 現在のフェーズ
 
-**Phase 4(拡張機能)実装中。天気自動記録は対象外に変更、動画対応・コメント・OCRは未着手。**
+**Phase1〜3はすべて実装完了。Phase4は「天気情報の自動記録」を対象外に決定した上で、残り(動画対応・コメント/リアクション・OCR・プッシュ通知)は未着手。**
 
-Phase1の機能スコープ(訪問マップ、旅行記録、データ共有、統計表示、アルバムまとめ、旅程表、ルート表示、PWA基本機能(ホーム画面追加・オフライン閲覧)など)は `docs/requirements_v5.md` の「2. 機能要件」および `docs/screen_design_v4.md` を参照。Phase2(プライバシーロック・思い出フラッシュバック・タグ付け)・Phase3(ウィッシュリスト・検索絞り込み・簡易費用記録)はすべて実装済み。
+- Phase1(訪問マップ、旅行記録、データ共有、統計表示、アルバムまとめ、旅程表、ルート表示、PWA基本機能、記録・旅行の削除など): 実装完了
+- Phase2(プライバシーロック、思い出フラッシュバック、タグ・カテゴリ付け): 実装完了
+- Phase3(ウィッシュリスト、検索・絞り込み、簡易費用記録): 実装完了
+- Phase4: 天気情報の自動記録は不要と判断し対象外(実装しない)。残り(動画対応、コメント・リアクション、チケット自動読み取り(OCR)、プッシュ通知)は未着手
 
-天気情報の自動記録は不要と判断し、`docs/requirements_v5.md` のPhase4機能一覧から削除済み(実装しない)。Phase4の残り(動画対応、コメント・リアクション、チケット自動読み取り(OCR)、プッシュ通知)は未着手。フェーズの優先順位やスコープ判断に迷う場合はユーザーに確認する。
+機能要件の詳細・実装状況は `docs/requirements_v6.md` の「2. 機能要件」を参照。フェーズの優先順位やスコープ判断に迷う場合はユーザーに確認する。
 
 ## 開発方針・コスト方針
 
-- **開発端末は Windows。Mac は不要。** ビルド・デプロイもWindows上、または軽量なCI(GitHub Actions **Ubuntu** ランナー)で完結する。
+- **開発端末は Windows。Mac は不要。** ビルド・デプロイもWindows上、または軽量なCI(GitHub Actions **Ubuntu** ランナー)で完結する構成を許容する。**ただし現状、デプロイ自動化は未構築で、開発者のWindows端末から`npm run deploy:hosting`を手動実行している**(詳細は`docs/architecture.md`参照)。
 - **コストは原則完全永続無料であること(Claude Code の利用料を除く)。**
   - Apple Developer Program($99/年)が前提となる機能・配布方式は採用しない
   - Firebase Firestore / Authentication / Hosting は無料枠(Sparkプラン相当)の範囲内でのみ利用する
@@ -54,29 +57,33 @@ Phase1の機能スコープ(訪問マップ、旅行記録、データ共有、�
 
 | レイヤ | 採用技術 |
 |---|---|
-| UI | React + Vite |
-| データ永続化・共有 | Firebase Firestore(無料枠) |
+| UI | React 19 + Vite + TypeScript |
+| ルーティング | react-router-dom v7(データルーター/`createBrowserRouter`。記録作成画面の離脱確認`useBlocker`のため) |
+| アイコン | lucide-react(線画スタイルで統一) |
+| データ永続化・共有 | Firebase Firestore(無料枠、永続ローカルキャッシュ有効) |
 | 認証 | Firebase Authentication(無料枠) |
-| 画像保存 | Firebase Storage(Blazeプラン登録が必要だが、無料枠内での運用+予算アラート設定を前提とする) |
-| 地図表示 | Leaflet + GeoJSON(国・都道府県ポリゴンデータによる色分け表示) |
+| 画像保存 | Firebase Storage(Blazeプラン登録が必要だが、無料枠内での運用+予算アラート設定を前提とする)。アップロード時にフルサイズ(長辺1600px)とサムネイル(長辺300px)の2種類をブラウザ内で生成して保存する |
+| 地図表示 | Leaflet + react-leaflet + GeoJSON(国・都道府県ポリゴンデータによる色分け表示)。タイルはCartoDB Voyager(明るい配色)を使用し、地図タイルのみdesign_system.mdのダーク基調の例外とする |
+| 地名検索 | OpenStreetMap Nominatim API(記録作成・ウィッシュリスト追加。利用規約に沿ったデバウンス・レート制限を実装) |
 | 位置情報取得 | ブラウザの Geolocation API |
-| 画像撮影・選択 | ブラウザの File input / getUserMedia API |
-| オフライン対応 | Service Worker + Cache API |
-| ホーム画面追加 | Web App Manifest(manifest.json) |
+| 画像撮影・選択 | ブラウザの File input(`capture`属性) |
+| オフライン対応 | Firestore永続ローカルキャッシュ(データ)+ Service Worker/Workbox(アプリ本体・写真) |
+| ホーム画面追加 | Web App Manifest(vite-plugin-pwa) |
 | ホスティング | Firebase Hosting(無料枠) |
-| デプロイ自動化 | GitHub Actions(Ubuntuランナー) |
-| 生体認証・ロック(Phase2) | WebAuthn、または簡易PINコード |
-| OCR(Phase4) | Tesseract.js等のブラウザ内OCRライブラリ、または無料枠のあるクラウドOCR |
+| デプロイ | 開発者のWindows端末から`npm run deploy:hosting`で手動実行。GitHub Actions等の自動化は未着手 |
+| 生体認証・ロック | WebAuthn(プラットフォーム認証器)+ 4桁PIN(ソルト付きハッシュ) |
+| OCR(Phase4、未着手) | 未定(Tesseract.js等のブラウザ内OCRライブラリ、または無料枠のあるクラウドOCRを想定) |
 
 Firebase設定値(`firebaseConfig`)はiOS用の`GoogleService-Info.plist`ではなく、**Web用アプリとしてFirebaseコンソールに別途登録した値**を使用し、`.env`で管理する(コミットしない)。
 
-## 画面構成・データモデル(Phase1確定、v3から変更なし)
+## 画面構成・データモデル
 
 - 下タブは「マップ」「統計」「設定」の3つのみ。記録追加は各画面の「+」ボタンから行い、タブは増やさない
-- 画面遷移・ER図の詳細は `docs/screen_design_v4.md` を参照
-- 主要エンティティ: `USER`(本人・彼女2レコード固定) / `TRIP`(1回の旅行、国・都道府県コードに紐づく) / `SPOT`(旅行内スポットまたは単発記録、`trip_id`はnullable) / `PHOTO`(スポットに紐づく複数枚の写真)
-- **訪問済み判定・統計集計ルール**: `trip_id`の有無を問わず、一度でもその国/都道府県にスポットが記録されていれば「訪問済み」として扱う(単発記録も集計に含める)
-- **ルートマップの色分け**: 固定パレットを旅行の登録順に自動割り当て(ユーザーによる色選択は行わない)
+- 画面一覧・画面遷移・ER図の詳細は `docs/screen_design_v5.md` を参照(ログイン・ロック・マップ・地域詳細・旅行詳細・スポット詳細・記録作成・記録一覧・ウィッシュリスト・統計・設定の全画面を反映)
+- 主要エンティティ: `USER`(本人・彼女2レコード固定、Firebase Authenticationのユーザーそのもの) / `TRIP`(1回の旅行、`costYen`を任意保持) / `SPOT`(旅行内スポットまたは単発記録、`tripId`はnullable、`tags`を保持) / `PHOTO`(スポットに紐づく写真。フルサイズ+サムネイルの2種類のURLを保持) / `WISH`(訪問済みとは別のウィッシュリスト項目)
+- **訪問済み判定・統計集計ルール**: `trip_id`の有無を問わず、一度でもその国/都道府県にスポットが記録されていれば「訪問済み」として扱う(単発記録も集計に含める)。**TRIPドキュメント自身の`countryCode`/`prefectureCode`(最初のスポット作成時点の値)は判定に使わない**(1つの旅行が複数国にまたがりうるため)
+- **ルートマップの色分け**: 固定パレットを旅行の登録順(全体での`createdAt`昇順)に自動割り当て(ユーザーによる色選択は行わない)
+- **削除操作**: スポット・旅行の削除は取り消せないため、`ConfirmDialog`(共通コンポーネント)での確認を必ず挟む。新しい削除操作を追加する際も同様にすること
 
 ## 実装上の注意
 

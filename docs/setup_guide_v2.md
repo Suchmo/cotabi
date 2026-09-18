@@ -8,11 +8,14 @@
 - [x] Claude Desktop版のインストール
 - [x] VS Code のインストール + Claude Code拡張機能の導入
 - [x] GitHubリポジトリ(`cotabi`)の作成・接続
-- [x] CLAUDE.md の作成(要更新: PWA方針の反映)
+- [x] CLAUDE.md の作成(PWA方針・最新のフェーズ状況を反映済み)
 - [x] Firebaseプロジェクトの作成(Firestore / Authentication / Storage有効化、Blazeプラン登録)
-- [ ] React + Viteプロジェクトの作成
-- [ ] Firebase JS SDKの導入・接続確認
-- [ ] Firebase Hostingへのデプロイ確認
+- [x] React + Viteプロジェクトの作成
+- [x] Firebase JS SDKの導入・接続確認
+- [x] Firebase Hostingへのデプロイ確認(現状は`npm run deploy:hosting`による手動デプロイ。GitHub Actions等の自動化は未着手)
+- [x] Phase1〜3の実装・デプロイ
+
+以下のSTEP 8〜12は、この進捗に至るまでの手順の記録として残しています(新しく環境を作り直す場合の参考用)。
 
 ---
 
@@ -25,7 +28,7 @@ VS Codeのターミナル(`cotabi`フォルダ直下)で、Claude Codeにこう�
 ```
 このプロジェクトに、React + Viteのフロントエンドプロジェクトを
 セットアップしてください。PWA対応(vite-plugin-pwa等)も含めてください。
-requirements_v5.mdの技術スタックに従ってください。
+requirements_v6.mdの技術スタックに従ってください。
 ```
 
 Claude Codeが `npm create vite@latest` 相当のセットアップを代行してくれます。実行後、以下で動作確認します。
@@ -64,14 +67,6 @@ npm run dev
 
 ## STEP 11: Firebase Hostingへのデプロイ
 
-Claude Codeにこう依頼してください。
-
-```
-このプロジェクトをFirebase Hostingにデプロイできるように設定してください。
-firebase-tools のインストールから、firebase init、
-GitHub Actionsでのデプロイ自動化(Ubuntu ランナー)まで含めてください。
-```
-
 初回のみ、以下のログインが必要です。
 
 ```powershell
@@ -81,6 +76,14 @@ firebase login
 
 ブラウザが開くので、Firebaseで使っているGoogleアカウントでログインしてください。
 
+デプロイは以下のコマンドで行います(`package.json`の`deploy:hosting`スクリプト)。
+
+```powershell
+npm run deploy:hosting
+```
+
+> **実際の運用について**: 当初はGitHub Actions(Ubuntuランナー)でのpush連動デプロイ自動化も検討したが、実装フェーズでは優先度を下げ、**開発者のWindows端末からの手動デプロイ**のまま運用している。自動化する場合は改めてワークフローファイルの追加が必要(未着手)。
+
 ## STEP 12: iPhoneでホーム画面に追加して確認
 
 1. デプロイ後に発行されるURL(例: `https://cotabi-xxxx.web.app`)にiPhoneのSafariでアクセス
@@ -89,11 +92,4 @@ firebase login
 
 ---
 
-## 参考: 今後CLAUDE.mdに反映してほしい内容
-
-VS CodeのClaude Codeパネルで、以下を依頼してCLAUDE.mdを更新してください。
-
-```
-docs/requirements_v5.mdの内容を踏まえて、CLAUDE.mdを更新してください。
-アプリ形態がネイティブiOS(SwiftUI)からPWA(React)に変更されたことを反映してください。
-```
+> この節にあった「今後CLAUDE.mdに反映してほしい内容」は、既にCLAUDE.md本体に反映済みのため削除した。CLAUDE.mdは`docs/requirements_v6.md`を含む最新ドキュメント一式を参照するよう随時更新している。
