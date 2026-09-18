@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { BackLink } from '../components/BackLink'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { WishlistMap } from '../components/WishlistMap'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -25,6 +26,7 @@ export function WishlistScreen() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [confirmTargetId, setConfirmTargetId] = useState<string | null>(null)
 
   const [placeQuery, setPlaceQuery] = useState('')
   const [placeResults, setPlaceResults] = useState<PlaceResult[]>([])
@@ -133,6 +135,7 @@ export function WishlistScreen() {
   }
 
   const handleDelete = async (id: string) => {
+    setConfirmTargetId(null)
     setDeletingId(id)
     setDeleteError(null)
     try {
@@ -260,7 +263,7 @@ export function WishlistScreen() {
             <button
               type="button"
               className="wishlist-screen__delete"
-              onClick={() => handleDelete(wish.id)}
+              onClick={() => setConfirmTargetId(wish.id)}
               disabled={deletingId === wish.id}
               aria-label="削除"
             >
@@ -269,6 +272,13 @@ export function WishlistScreen() {
           </div>
         ))}
       </div>
+
+      <ConfirmDialog
+        open={confirmTargetId !== null}
+        message="この項目をウィッシュリストから削除しますか?この操作は取り消せません。"
+        onConfirm={() => confirmTargetId && handleDelete(confirmTargetId)}
+        onCancel={() => setConfirmTargetId(null)}
+      />
     </div>
   )
 }

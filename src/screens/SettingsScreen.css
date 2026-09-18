@@ -133,3 +133,9 @@
   flex-direction: column;
   gap: 8px;
 }
+
+.settings-screen__attribution {
+  margin: 16px 0 0;
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}

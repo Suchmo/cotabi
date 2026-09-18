@@ -209,6 +209,13 @@ export function SettingsScreen() {
         <LogOut size={16} strokeWidth={1.5} />
         ログアウト
       </button>
+
+      {/* 日本の都道府県境界データ(public/geo/japan-prefectures.geojson)の
+          ライセンス条件で、出典クレジットを画面のどこかに表示することが
+          求められているため表示する。地名検索(Nominatim)の出典もあわせてここにまとめる。 */}
+      <p className="settings-screen__attribution">
+        都道府県境界データ: 国土交通省 国土数値情報 ・ 位置情報検索: OpenStreetMap Nominatim
+      </p>
     </div>
   )
 }
