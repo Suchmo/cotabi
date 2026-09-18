@@ -308,10 +308,12 @@ export async function deleteTrip(tripId: string): Promise<void> {
 }
 
 export async function getSpotDetail(spotId: string): Promise<SpotDetail | null> {
-  const [spotsSnap, tripsSnap, photosBySpotId] = await Promise.all([
+  // このスポット1件の写真だけが必要なため、photosコレクション全件を取得する
+  // listPhotosBySpotId()ではなく、spotIdで絞り込んだクエリを使う。
+  const [spotsSnap, tripsSnap, photos] = await Promise.all([
     getDocsCached('spots', spotsCollection),
     getDocsCached('trips', tripsCollection),
-    listPhotosBySpotId(),
+    getPhotosForSpot(spotId),
   ])
 
   const spotDoc = spotsSnap.docs.find((doc) => doc.id === spotId)
@@ -326,6 +328,6 @@ export async function getSpotDetail(spotId: string): Promise<SpotDetail | null> 
   return {
     spot,
     tripTitle,
-    photos: photosBySpotId.get(spot.id) ?? [],
+    photos,
   }
 }

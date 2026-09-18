@@ -4,6 +4,12 @@ import { useAuth } from '../hooks/useAuth'
 import { useLock } from '../hooks/useLock'
 import { verifyWebAuthnCredential } from '../lib/webauthn'
 import { verifyPin } from '../lib/pinLock'
+import {
+  PIN_LOCKOUT_MS,
+  clearAttempts,
+  getLockedUntil,
+  recordFailedAttempt,
+} from '../lib/pinAttempts'
 import './LockScreen.css'
 
 // Firebase Authenticationのログインセッションとは別に挟む、端末上の
@@ -15,8 +21,35 @@ export function LockScreen() {
   const [pin, setPin] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [webauthnTrying, setWebauthnTrying] = useState(false)
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null)
+  const [remainingSeconds, setRemainingSeconds] = useState(0)
 
   const hasWebAuthn = !!settings?.webauthnCredentialId
+  const pinLockedOut = lockedUntil !== null
+
+  // PINの連続失敗によるロックアウトは端末に永続化しているため、画面表示時に
+  // 既にロックアウト中でないか確認する(ページ再読み込みでの回避を防ぐ)。
+  useEffect(() => {
+    if (!user) return
+    setLockedUntil(getLockedUntil(user.uid))
+  }, [user])
+
+  // ロックアウト中は1秒ごとに残り時間を更新し、経過したら解除する。
+  useEffect(() => {
+    if (!lockedUntil) return
+    const tick = () => {
+      const remaining = Math.ceil((lockedUntil - Date.now()) / 1000)
+      if (remaining <= 0) {
+        setLockedUntil(null)
+        setError(null)
+      } else {
+        setRemainingSeconds(remaining)
+      }
+    }
+    tick()
+    const interval = window.setInterval(tick, 1000)
+    return () => window.clearInterval(interval)
+  }, [lockedUntil])
 
   // PIN未設定のままロックが有効になっている(通常は設定画面側で防いでいる)
   // 想定外の状態では、解除不能になることを避けるためロックしない。
@@ -48,13 +81,25 @@ export function LockScreen() {
 
   const handlePinSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!settings?.pinHash || !settings.pinSalt) return
+    if (!settings?.pinHash || !settings.pinSalt || !user) return
+    if (pinLockedOut) return
+
     const ok = await verifyPin(pin, settings.pinSalt, settings.pinHash)
     if (ok) {
+      clearAttempts(user.uid)
       unlock()
+      return
+    }
+
+    setPin('')
+    const newLockedUntil = recordFailedAttempt(user.uid)
+    if (newLockedUntil) {
+      setLockedUntil(newLockedUntil)
+      setError(
+        `PINコードが違います。試行回数が上限に達したため、${PIN_LOCKOUT_MS / 1000}秒間ロックします。`,
+      )
     } else {
       setError('PINコードが違います。')
-      setPin('')
     }
   }
 
@@ -86,11 +131,17 @@ export function LockScreen() {
               autoComplete="off"
               maxLength={4}
               value={pin}
+              disabled={pinLockedOut}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
             />
           </label>
           {error && <p className="lock-screen__error">{error}</p>}
-          <button type="submit" disabled={pin.length !== 4}>
+          {pinLockedOut && (
+            <p className="lock-screen__error">
+              しばらく待ってから再度お試しください(残り{remainingSeconds}秒)。
+            </p>
+          )}
+          <button type="submit" disabled={pinLockedOut || pin.length !== 4}>
             解除
           </button>
         </form>

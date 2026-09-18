@@ -1,15 +1,40 @@
-// PINコード(4桁)をFirestoreに平文で保存しないための簡易ハッシュ処理。
-// ソルト(端末ごとではなくユーザーごとに1つ発行)とPINを連結してSHA-256を取り、
-// ハッシュ値のみを保存する。ロック解除時は同じ手順でハッシュ化して比較する。
+// PINコード(4桁)をFirestoreに平文で保存しないための処理。
+// 4桁PIN(1万通り)は総当たりされやすいため、単純なSHA-256の1回適用ではなく、
+// PBKDF2(意図的に低速なハッシュ関数)でストレッチングする。反復回数は
+// Web Crypto APIのネイティブ実装であれば端末上でも数百ms程度で収まる範囲で、
+// かつ十分に総当たりを遅くできる210,000回とした。
+const PBKDF2_ITERATIONS = 210_000
+const HASH_BITS = 256
+
 export function generateSalt(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16))
   return bytesToHex(bytes)
 }
 
+async function derivePinHash(pin: string, salt: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(pin),
+    'PBKDF2',
+    false,
+    ['deriveBits'],
+  )
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: encoder.encode(salt),
+      iterations: PBKDF2_ITERATIONS,
+      hash: 'SHA-256',
+    },
+    keyMaterial,
+    HASH_BITS,
+  )
+  return bytesToHex(new Uint8Array(derivedBits))
+}
+
 export async function hashPin(pin: string, salt: string): Promise<string> {
-  const data = new TextEncoder().encode(`${salt}:${pin}`)
-  const digest = await crypto.subtle.digest('SHA-256', data)
-  return bytesToHex(new Uint8Array(digest))
+  return derivePinHash(pin, salt)
 }
 
 export async function verifyPin(
@@ -17,7 +42,7 @@ export async function verifyPin(
   salt: string,
   expectedHash: string,
 ): Promise<boolean> {
-  const hash = await hashPin(pin, salt)
+  const hash = await derivePinHash(pin, salt)
   return hash === expectedHash
 }
 

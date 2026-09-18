@@ -3,9 +3,48 @@ rules_version = '2';
 // COTABIは本人・彼女の2人専用アプリで、新規登録機能はなく、
 // アカウントはFirebaseコンソールから手動で2件のみ作成する運用のため、
 // 「認証済みであること」がそのまま「2人のどちらかであること」の判定になる。
+// ただし以下の2点は例外として、より狭い条件にしている。
+//  1. users/{uid}: プライバシーロック設定(PINのハッシュ・ソルト、WebAuthn
+//     資格情報ID)を保持するため、本人(request.auth.uid == uid)のみが
+//     読み書きできるようにする。相方であっても他人のロック設定は
+//     読み書きできない。
+//  2. trips/spots/wishesの作成(create): recordedBy/createdByに対応する
+//     ...Emailフィールドが、認証済みユーザー自身のメールアドレス
+//     (request.auth.token.email)と一致することを要求し、他人になりすまして
+//     記録・ウィッシュリストを作成できないようにする。更新(update)では
+//     このフィールドを書き込み時点の値から変更できないようにし(記録者の
+//     差し替えを禁止)、削除(delete)は従来どおり認証済みであれば可能とする。
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /trips/{tripId} {
+      allow read, delete: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.createdByEmail == request.auth.token.email;
+      allow update: if request.auth != null
+        && request.resource.data.createdByEmail == resource.data.createdByEmail;
+    }
+
+    match /spots/{spotId} {
+      allow read, delete: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.recordedByEmail == request.auth.token.email;
+      allow update: if request.auth != null
+        && request.resource.data.recordedByEmail == resource.data.recordedByEmail;
+    }
+
+    match /wishes/{wishId} {
+      allow read, delete: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.createdByEmail == request.auth.token.email;
+      allow update: if request.auth != null
+        && request.resource.data.createdByEmail == resource.data.createdByEmail;
+    }
+
+    match /photos/{photoId} {
       allow read, write: if request.auth != null;
     }
   }
